@@ -28,9 +28,18 @@ showpage/
 
 - **服务器地址**: 114.55.150.44
 - **用户名**: root
+- **SSH别名**: aliyun-ecs-showpage（需配置）
 - **部署目录**: /root/www/showpage
 - **访问域名**: case.coderboot.xyz/showpage
 - **nginx配置**: /etc/nginx/sites-available/showpage.conf
+
+### SSH密钥配置
+
+项目使用SSH密钥认证进行安全连接：
+- **私钥**: `~/.ssh/aliyun_ecs_id_rsa`
+- **公钥**: `~/.ssh/aliyun_ecs_id_rsa.pub`
+- **SSH配置**: `~/.ssh/config` 中的 `aliyun-ecs-showpage` 别名
+- **设置指南**: [`SSH_SETUP.md`](./SSH_SETUP.md)
 
 ## 快速部署
 
@@ -43,13 +52,18 @@ showpage/
 ### 部署步骤
 
 1. **设置SSH密钥认证**（推荐）：
-   ```bash
-   # 生成SSH密钥（如果还没有）
-   ssh-keygen -t rsa -b 4096
    
-   # 将公钥复制到服务器
-   ssh-copy-id root@114.55.150.44
+   按照以下步骤设置SSH密钥：
+   
+   ```bash
+   # 生成专用SSH密钥对
+   ssh-keygen -t rsa -b 4096 -f ~/.ssh/aliyun_ecs_id_rsa -C "showpage-deploy@aliyun-ecs"
+   
+   # 上传公钥到服务器
+   ssh-copy-id -i ~/.ssh/aliyun_ecs_id_rsa.pub aliyun-ecs-showpage
    ```
+   
+   📖 **详细设置说明**：请参考 [`SSH_SETUP.md`](./SSH_SETUP.md) 文档获取完整的SSH密钥设置指南，包含SSH客户端配置等步骤。
 
 2. **运行部署脚本**：
    ```bash
@@ -123,12 +137,22 @@ showpage/
 
 ### 上传文件
 ```bash
+# 使用SSH别名（推荐）
+scp *.html aliyun-ecs-showpage:/root/www/showpage/
+
+# 或使用IP地址
 scp *.html root@114.55.150.44:/root/www/showpage/
 ```
 
 ### 创建nginx配置
 ```bash
+# 使用SSH别名（推荐）
+ssh aliyun-ecs-showpage
+
+# 或使用IP地址
 ssh root@114.55.150.44
+
+# 然后创建nginx配置
 cat > /etc/nginx/sites-available/showpage.conf << 'EOF'
 # nginx配置内容...
 EOF
@@ -190,10 +214,14 @@ systemctl status nginx
 
 ### 备份数据
 ```bash
-# 备份远程文件
-scp -r root@114.55.150.44:/root/www/showpage/ ./backup/
+# 备份远程文件（使用SSH别名）
+scp -r aliyun-ecs-showpage:/root/www/showpage/ ./backup/
 
-# 备份nginx配置
+# 备份nginx配置（使用SSH别名）
+scp aliyun-ecs-showpage:/etc/nginx/sites-available/showpage.conf ./backup/
+
+# 或使用IP地址
+scp -r root@114.55.150.44:/root/www/showpage/ ./backup/
 scp root@114.55.150.44:/etc/nginx/sites-available/showpage.conf ./backup/
 ```
 
