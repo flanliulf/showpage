@@ -39,14 +39,45 @@ nginx/
 
 ```
 showpage/
+├── case.example.conf                                   # nginx配置文件示例
 ├── deploy.sh                                           # 自动部署脚本
 ├── README.md                                           # 项目说明文档
+├── SSH_SETUP.md                                        # SSH密钥设置指南
 ├── promptbase-link-refly-guizang-v2-claude4.html      # HTML页面1
 ├── arxivlicense-link-refly-guizang-v2-claude4.html    # HTML页面2
 ├── openevals-link-sumbuddy-refly-guizang-v3-claude4.html # HTML页面3
 ├── openevals-link-refly-guizang-v3-claude4.html       # HTML页面4
 └── openevals-link-refly-guizang-v2-claude4.html       # HTML页面5
 ```
+
+### 📋 nginx配置文件
+
+项目包含了一个完整的nginx配置文件示例 `case.example.conf`，这个文件包含：
+
+- **🔧 完整配置**：包含所有必要的location块、安全头部、缓存策略
+- **📝 详细注释**：每个配置项都有详细的中文注释说明
+- **🚀 部署指南**：包含完整的使用说明和部署步骤
+- **🔒 安全配置**：防止XSS、点击劫持等安全威胁
+- **⚡ 性能优化**：gzip压缩、智能缓存策略
+- **📈 扩展支持**：为未来案例预留了配置模板
+
+#### 使用方法
+
+```bash
+# 复制配置文件到nginx目录
+sudo cp case.example.conf /etc/nginx/sites-available/case.conf
+
+# 启用配置
+sudo ln -sf /etc/nginx/sites-available/case.conf /etc/nginx/sites-enabled/case.conf
+
+# 测试配置
+sudo nginx -t
+
+# 重载nginx
+sudo systemctl reload nginx
+```
+
+此配置文件是项目架构的核心，建议在手动部署或故障排除时参考使用。
 
 ## 服务器配置信息
 
