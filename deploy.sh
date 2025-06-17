@@ -3,7 +3,7 @@
 # 部署脚本 - 将HTML文件上传到远程服务器并配置nginx
 # 服务器信息
 SERVER_HOST="aliyun-ecs-showpage"  # 使用SSH配置别名
-REMOTE_PATH="/root/www/showpage"
+REMOTE_PATH="/usr/share/nginx/html/showpage"
 DOMAIN="case.coderboot.xyz"
 
 echo "========================================="
