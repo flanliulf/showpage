@@ -1,6 +1,6 @@
-# HTML页面部署项目
+# ShowPage - HTML页面展示项目
 
-这个项目用于管理和部署多个静态HTML文件到远程服务器，并配置nginx来提供外部访问。
+这个项目用于管理和部署多个静态HTML文件到远程服务器，并配置nginx来提供外部访问。项目名称为 ShowPage，通过 case.coderboot.xyz/showpage 域名提供服务。
 
 ## 🚀 项目特性
 - ✅ 自动化部署脚本
@@ -14,7 +14,7 @@
 ## 项目结构
 
 ```
-web-site-page/
+showpage/
 ├── deploy.sh                                           # 自动部署脚本
 ├── README.md                                           # 项目说明文档
 ├── promptbase-link-refly-guizang-v2-claude4.html      # HTML页面1
@@ -28,9 +28,9 @@ web-site-page/
 
 - **服务器地址**: 114.55.150.44
 - **用户名**: root
-- **部署目录**: /root/www/page
-- **访问域名**: show.coderboot.xyz
-- **nginx配置**: /etc/nginx/sites-available/show.conf
+- **部署目录**: /root/www/showpage
+- **访问域名**: case.coderboot.xyz/showpage
+- **nginx配置**: /etc/nginx/sites-available/showpage.conf
 
 ## 快速部署
 
@@ -64,10 +64,10 @@ web-site-page/
 
 部署脚本会自动执行以下操作：
 
-1. ✅ **创建远程目录** - 在服务器上创建 `/root/www/page` 目录
+1. ✅ **创建远程目录** - 在服务器上创建 `/root/www/showpage` 目录
 2. ✅ **上传HTML文件** - 将所有 `*.html` 文件上传到服务器
 3. ✅ **设置文件权限** - 设置适当的文件权限和所有者
-4. ✅ **创建nginx配置** - 生成 `/etc/nginx/sites-available/show.conf` 配置文件
+4. ✅ **创建nginx配置** - 生成 `/etc/nginx/sites-available/showpage.conf` 配置文件
 5. ✅ **启用网站配置** - 创建软链接到 `sites-enabled` 目录
 6. ✅ **测试nginx配置** - 验证配置文件语法正确
 7. ✅ **重载nginx服务** - 应用新的配置
@@ -79,8 +79,9 @@ web-site-page/
 
 ### 基本配置
 - 监听80端口
-- 服务器名称：`show.coderboot.xyz`
-- 网站根目录：`/root/www/page`
+- 服务器名称：`case.coderboot.xyz`
+- 应用路径：`/showpage`
+- 网站根目录：`/root/www/showpage`
 - 默认首页：`index.html`
 
 ### 性能优化
@@ -89,7 +90,7 @@ web-site-page/
 - **安全头部**：设置各种安全相关的HTTP头部
 
 ### API端点
-- **页面列表API**: `http://show.coderboot.xyz/api/pages`
+- **页面列表API**: `http://case.coderboot.xyz/showpage/api/pages`
   - 返回JSON格式的页面列表
   - 包含页面名称和标题信息
 
@@ -102,19 +103,19 @@ web-site-page/
 部署完成后，您可以通过以下方式访问：
 
 ### 主页面
-- **URL**: http://show.coderboot.xyz
+- **URL**: http://case.coderboot.xyz/showpage/
 - **功能**: 显示所有页面的导航界面
 
 ### 具体页面
-- 🏠 **主页导航**: http://show.coderboot.xyz
-- 📄 **PromptBase页面**: http://show.coderboot.xyz/promptbase-link-refly-guizang-v2-claude4.html
-- 📄 **ArxivLicense页面**: http://show.coderboot.xyz/arxivlicense-link-refly-guizang-v2-claude4.html
-- 📄 **OpenEvals Sumbuddy页面**: http://show.coderboot.xyz/openevals-link-sumbuddy-refly-guizang-v3-claude4.html
-- 📄 **OpenEvals v3页面**: http://show.coderboot.xyz/openevals-link-refly-guizang-v3-claude4.html
-- 📄 **OpenEvals v2页面**: http://show.coderboot.xyz/openevals-link-refly-guizang-v2-claude4.html
+- 🏠 **主页导航**: http://case.coderboot.xyz/showpage/
+- 📄 **PromptBase页面**: http://case.coderboot.xyz/showpage/promptbase-link-refly-guizang-v2-claude4.html
+- 📄 **ArxivLicense页面**: http://case.coderboot.xyz/showpage/arxivlicense-link-refly-guizang-v2-claude4.html
+- 📄 **OpenEvals Sumbuddy页面**: http://case.coderboot.xyz/showpage/openevals-link-sumbuddy-refly-guizang-v3-claude4.html
+- 📄 **OpenEvals v3页面**: http://case.coderboot.xyz/showpage/openevals-link-refly-guizang-v3-claude4.html
+- 📄 **OpenEvals v2页面**: http://case.coderboot.xyz/showpage/openevals-link-refly-guizang-v2-claude4.html
 
 ### API接口
-- **页面列表**: http://show.coderboot.xyz/api/pages
+- **页面列表**: http://case.coderboot.xyz/showpage/api/pages
 
 ## 手动操作指南
 
@@ -122,20 +123,20 @@ web-site-page/
 
 ### 上传文件
 ```bash
-scp *.html root@114.55.150.44:/root/www/page/
+scp *.html root@114.55.150.44:/root/www/showpage/
 ```
 
 ### 创建nginx配置
 ```bash
 ssh root@114.55.150.44
-cat > /etc/nginx/sites-available/show.conf << 'EOF'
+cat > /etc/nginx/sites-available/showpage.conf << 'EOF'
 # nginx配置内容...
 EOF
 ```
 
 ### 启用配置
 ```bash
-ln -sf /etc/nginx/sites-available/show.conf /etc/nginx/sites-enabled/show.conf
+ln -sf /etc/nginx/sites-available/showpage.conf /etc/nginx/sites-enabled/showpage.conf
 nginx -t
 systemctl reload nginx
 ```
@@ -167,10 +168,10 @@ systemctl reload nginx
 ### 日志查看
 ```bash
 # nginx访问日志
-tail -f /var/log/nginx/show.coderboot.xyz.access.log
+tail -f /var/log/nginx/case.coderboot.xyz.access.log
 
 # nginx错误日志
-tail -f /var/log/nginx/show.coderboot.xyz.error.log
+tail -f /var/log/nginx/case.coderboot.xyz.error.log
 
 # nginx服务状态
 systemctl status nginx
@@ -190,10 +191,10 @@ systemctl status nginx
 ### 备份数据
 ```bash
 # 备份远程文件
-scp -r root@114.55.150.44:/root/www/page/ ./backup/
+scp -r root@114.55.150.44:/root/www/showpage/ ./backup/
 
 # 备份nginx配置
-scp root@114.55.150.44:/etc/nginx/sites-available/show.conf ./backup/
+scp root@114.55.150.44:/etc/nginx/sites-available/showpage.conf ./backup/
 ```
 
 ## 安全建议

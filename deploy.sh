@@ -4,8 +4,8 @@
 # 服务器信息
 SERVER_IP="114.55.150.44"
 SERVER_USER="root"
-REMOTE_PATH="/root/www/page"
-DOMAIN="show.coderboot.xyz"
+REMOTE_PATH="/root/www/showpage"
+DOMAIN="case.coderboot.xyz"
 
 echo "========================================="
 echo "开始部署HTML文件到远程服务器"
@@ -48,14 +48,10 @@ fi
 
 # 4. 创建nginx配置文件
 echo "4. 创建nginx配置文件..."
-ssh $SERVER_USER@$SERVER_IP "cat > /etc/nginx/sites-available/show.conf << 'EOF'
+ssh $SERVER_USER@$SERVER_IP "cat > /etc/nginx/sites-available/showpage.conf << 'EOF'
 server {
     listen 80;
     server_name $DOMAIN;
-    
-    # 网站根目录
-    root $REMOTE_PATH;
-    index index.html;
     
     # 启用gzip压缩
     gzip on;
@@ -69,8 +65,15 @@ server {
         add_header Cache-Control \"public, immutable\";
     }
     
-    # 主要页面路由
-    location / {
+    # 根路径重定向到 /showpage
+    location = / {
+        return 301 /showpage/;
+    }
+    
+    # showpage 应用路径
+    location /showpage {
+        alias $REMOTE_PATH;
+        index index.html;
         try_files \$uri \$uri/ =404;
         
         # 设置安全头
@@ -82,7 +85,7 @@ server {
     }
     
     # 页面列表接口（返回JSON格式的页面列表）
-    location /api/pages {
+    location /showpage/api/pages {
         default_type application/json;
         return 200 '{
             \"pages\": [
@@ -114,7 +117,7 @@ fi
 
 # 5. 启用网站配置
 echo "5. 启用nginx网站配置..."
-ssh $SERVER_USER@$SERVER_IP "ln -sf /etc/nginx/sites-available/show.conf /etc/nginx/sites-enabled/show.conf"
+ssh $SERVER_USER@$SERVER_IP "ln -sf /etc/nginx/sites-available/showpage.conf /etc/nginx/sites-enabled/showpage.conf"
 
 if [ $? -eq 0 ]; then
     echo "✓ nginx配置启用成功"
@@ -152,7 +155,7 @@ ssh $SERVER_USER@$SERVER_IP "cat > $REMOTE_PATH/index.html << 'EOF'
 <head>
     <meta charset=\"UTF-8\">
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-    <title>HTML页面展示站点</title>
+    <title>ShowPage - HTML页面展示站点</title>
     <style>
         * {
             margin: 0;
@@ -279,7 +282,7 @@ ssh $SERVER_USER@$SERVER_IP "cat > $REMOTE_PATH/index.html << 'EOF'
 <body>
     <div class=\"container\">
         <div class=\"header\">
-            <h1>HTML页面展示站点</h1>
+            <h1>ShowPage - HTML页面展示站点</h1>
             <p>浏览和访问项目中的各个HTML页面</p>
         </div>
         
@@ -332,8 +335,8 @@ fi
 
 echo "========================================="
 echo "部署完成！"
-echo "访问地址: http://$DOMAIN"
-echo "页面列表API: http://$DOMAIN/api/pages"
+echo "访问地址: http://$DOMAIN/showpage/"
+echo "页面列表API: http://$DOMAIN/showpage/api/pages"
 echo ""
 echo "已部署的页面："
 echo "- promptbase-link-refly-guizang-v2-claude4.html"
