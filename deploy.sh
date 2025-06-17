@@ -3,7 +3,7 @@
 # 部署脚本 - 将HTML文件上传到远程服务器并配置nginx
 # 服务器信息
 SERVER_HOST="aliyun-ecs-showpage"  # 使用SSH配置别名
-REMOTE_PATH="/root/www/showpage"
+REMOTE_PATH="/var/www/html/showpage"
 DOMAIN="case.coderboot.xyz"
 
 echo "========================================="
@@ -37,7 +37,7 @@ fi
 
 # 3. 设置文件权限
 echo "3. 设置文件权限..."
-ssh $SERVER_HOST "chmod 644 $REMOTE_PATH/*.html && chown -R root:root $REMOTE_PATH"
+ssh $SERVER_HOST "chmod 644 $REMOTE_PATH/*.html && chown -R www-data:www-data $REMOTE_PATH"
 
 if [ $? -eq 0 ]; then
     echo "✓ 文件权限设置成功"
@@ -74,9 +74,8 @@ server {
     # ========== ShowPage 案例 ==========
     # showpage 应用路径
     location /showpage {
-        alias $REMOTE_PATH;
-        index index.html;
-        try_files \$uri \$uri/ =404;
+        root /var/www/html;
+        try_files \$uri \$uri/ \$uri/index.html =404;
         
         # 设置安全头
         add_header X-Frame-Options \"SAMEORIGIN\" always;
