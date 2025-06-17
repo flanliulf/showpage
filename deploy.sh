@@ -3,14 +3,14 @@
 # 部署脚本 - 将HTML文件上传到远程服务器并配置nginx
 # 服务器信息
 SERVER_HOST="aliyun-ecs-showpage"  # 使用SSH配置别名
-REMOTE_PATH="/usr/share/nginx/html/showpage"
+REMOTE_PATH="/root/www/showpage"
 DOMAIN="case.coderboot.xyz"
 
 echo "========================================="
 echo "开始部署HTML文件到远程服务器"
 echo "服务器: $SERVER_HOST"
 echo "目标目录: $REMOTE_PATH"
-echo "域名: $DOMAIN"
+echo "域名: $DOMAIN (通过主配置文件 case.conf 管理)"
 echo "========================================="
 
 # 1. 创建远程目录
@@ -45,9 +45,17 @@ else
     echo "✗ 文件权限设置失败"
 fi
 
-# 4. 创建nginx配置文件
-echo "4. 创建nginx配置文件..."
-ssh $SERVER_HOST "cat > /etc/nginx/sites-available/showpage.conf << 'EOF'
+# 4. 检查主配置文件是否存在
+echo "4. 检查主配置文件..."
+ssh $SERVER_HOST "test -f /etc/nginx/sites-available/case.conf"
+
+if [ $? -eq 0 ]; then
+    echo "✓ 主配置文件 case.conf 已存在"
+else
+    echo "⚠ 主配置文件 case.conf 不存在，创建中..."
+    
+    # 创建主配置文件
+    ssh $SERVER_HOST "cat > /etc/nginx/sites-available/case.conf << 'EOF'
 server {
     listen 80;
     server_name $DOMAIN;
@@ -58,17 +66,12 @@ server {
     gzip_min_length 1024;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
     
-    # 设置缓存策略
-    location ~* \.(html|css|js|png|jpg|jpeg|gif|ico|svg)$ {
-        expires 1y;
-        add_header Cache-Control \"public, immutable\";
-    }
-    
     # 根路径重定向到 /showpage
     location = / {
         return 301 /showpage/;
     }
     
+    # ========== ShowPage 案例 ==========
     # showpage 应用路径
     location /showpage {
         alias $REMOTE_PATH;
@@ -83,7 +86,7 @@ server {
         add_header Content-Security-Policy \"default-src 'self' http: https: data: blob: 'unsafe-inline'\" always;
     }
     
-    # 页面列表接口（返回JSON格式的页面列表）
+    # showpage 页面列表接口
     location /showpage/api/pages {
         default_type application/json;
         return 200 '{
@@ -97,6 +100,19 @@ server {
         }';
     }
     
+    # ========== 通用配置 ==========
+    # 静态文件缓存策略
+    location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 30d;
+        add_header Cache-Control \"public, no-transform\";
+    }
+    
+    # HTML文件不缓存，确保内容更新
+    location ~* \.html$ {
+        expires -1;
+        add_header Cache-Control \"no-store, no-cache, must-revalidate, proxy-revalidate\";
+    }
+    
     # 错误页面
     error_page 404 /404.html;
     error_page 500 502 503 504 /50x.html;
@@ -104,19 +120,27 @@ server {
     # 日志配置
     access_log /var/log/nginx/$DOMAIN.access.log;
     error_log /var/log/nginx/$DOMAIN.error.log;
+    
+    # 禁止访问隐藏文件
+    location ~ /\\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
 }
 EOF"
-
-if [ $? -eq 0 ]; then
-    echo "✓ nginx配置文件创建成功"
-else
-    echo "✗ nginx配置文件创建失败"
-    exit 1
+    
+    if [ $? -eq 0 ]; then
+        echo "✓ 主配置文件创建成功"
+    else
+        echo "✗ 主配置文件创建失败"
+        exit 1
+    fi
 fi
 
 # 5. 启用网站配置
 echo "5. 启用nginx网站配置..."
-ssh $SERVER_HOST "ln -sf /etc/nginx/sites-available/showpage.conf /etc/nginx/sites-enabled/showpage.conf"
+ssh $SERVER_HOST "ln -sf /etc/nginx/sites-available/case.conf /etc/nginx/sites-enabled/case.conf"
 
 if [ $? -eq 0 ]; then
     echo "✓ nginx配置启用成功"
@@ -198,130 +222,111 @@ ssh $SERVER_HOST "cat > $REMOTE_PATH/index.html << 'EOF'
         
         .pages-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
         }
         
         .page-card {
             background: white;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
         .page-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
         
         .page-card h3 {
             color: #1d1d1f;
             margin-bottom: 10px;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
         }
         
-        .page-card p {
-            color: #666;
-            margin-bottom: 15px;
-            line-height: 1.6;
-        }
-        
-        .page-link {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .page-card a {
+            color: #007aff;
             text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            font-weight: 600;
-            transition: all 0.3s ease;
+            font-weight: 500;
         }
         
-        .page-link:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        .page-card a:hover {
+            text-decoration: underline;
         }
         
-        .stats {
+        .footer {
             text-align: center;
-            margin: 40px 0;
-            padding: 20px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 15px;
+            color: #666;
+            font-size: 0.9rem;
         }
         
-        .stats h2 {
+        .cases-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #007aff;
+        }
+        
+        .cases-info h2 {
             color: #1d1d1f;
             margin-bottom: 10px;
         }
         
-        .stats p {
+        .cases-info p {
             color: #666;
-            font-size: 1.1rem;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .pages-grid {
-                grid-template-columns: 1fr;
-            }
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
     <div class=\"container\">
         <div class=\"header\">
-            <h1>ShowPage - HTML页面展示站点</h1>
-            <p>浏览和访问项目中的各个HTML页面</p>
+            <h1>ShowPage</h1>
+            <p>HTML页面展示站点 - 静态案例集合</p>
         </div>
         
-        <div class=\"stats\">
-            <h2>页面统计</h2>
-            <p>当前共有 <strong>5</strong> 个HTML页面可供浏览</p>
+        <div class=\"cases-info\">
+            <h2>📋 案例说明</h2>
+            <p>本站点通过统一的主配置文件管理多个静态HTML案例项目，每个案例通过不同的路径进行访问。当前可用的案例项目：</p>
+            <ul style=\"margin-top: 10px; margin-left: 20px;\">
+                <li><strong>ShowPage</strong>: /showpage - HTML页面展示案例</li>
+                <li><strong>PostEditor</strong>: /postereditor - 海报编辑器案例 (即将添加)</li>
+            </ul>
         </div>
         
-        <div class=\"pages-grid\">
-            <div class=\"page-card\">
-                <h3>PromptBase Link Refly v2</h3>
-                <p>PromptBase相关的链接重构页面，第二版本设计</p>
-                <a href=\"./promptbase-link-refly-guizang-v2-claude4.html\" class=\"page-link\">查看页面</a>
-            </div>
-            
-            <div class=\"page-card\">
-                <h3>ArxivLicense Link Refly v2</h3>
-                <p>ArxivLicense许可证相关的链接页面，重构版本</p>
-                <a href=\"./arxivlicense-link-refly-guizang-v2-claude4.html\" class=\"page-link\">查看页面</a>
-            </div>
-            
-            <div class=\"page-card\">
-                <h3>OpenEvals Link Sumbuddy v3</h3>
-                <p>OpenEvals评估系统，集成Sumbuddy功能的第三版</p>
-                <a href=\"./openevals-link-sumbuddy-refly-guizang-v3-claude4.html\" class=\"page-link\">查看页面</a>
-            </div>
-            
-            <div class=\"page-card\">
-                <h3>OpenEvals Link Refly v3</h3>
-                <p>OpenEvals评估系统，链接重构的第三版本</p>
-                <a href=\"./openevals-link-refly-guizang-v3-claude4.html\" class=\"page-link\">查看页面</a>
-            </div>
-            
-            <div class=\"page-card\">
-                <h3>OpenEvals Link Refly v2</h3>
-                <p>OpenEvals评估系统，链接重构的第二版本</p>
-                <a href=\"./openevals-link-refly-guizang-v2-claude4.html\" class=\"page-link\">查看页面</a>
-            </div>
+        <div class=\"pages-grid\" id=\"pagesGrid\">
+            <!-- 页面卡片将通过JavaScript动态加载 -->
+        </div>
+        
+        <div class=\"footer\">
+            <p>© 2025 ShowPage - 基于nginx主配置文件的静态案例管理系统</p>
         </div>
     </div>
+    
+    <script>
+        // 获取页面列表
+        fetch('/showpage/api/pages')
+            .then(response => response.json())
+            .then(data => {
+                const grid = document.getElementById('pagesGrid');
+                data.pages.forEach(page => {
+                    const card = document.createElement('div');
+                    card.className = 'page-card';
+                    card.innerHTML = \`
+                        <h3>\${page.title}</h3>
+                        <a href=\"/showpage/\${page.name}\" target=\"_blank\">查看页面 →</a>
+                    \`;
+                    grid.appendChild(card);
+                });
+            })
+            .catch(error => {
+                console.error('Failed to load pages:', error);
+                document.getElementById('pagesGrid').innerHTML = '<p style=\"text-align: center; color: #666;\">加载页面列表失败</p>';
+            });
+    </script>
 </body>
 </html>
 EOF"
@@ -334,13 +339,14 @@ fi
 
 echo "========================================="
 echo "部署完成！"
-echo "访问地址: http://$DOMAIN/showpage/"
-echo "页面列表API: http://$DOMAIN/showpage/api/pages"
 echo ""
-echo "已部署的页面："
-echo "- promptbase-link-refly-guizang-v2-claude4.html"
-echo "- arxivlicense-link-refly-guizang-v2-claude4.html"
-echo "- openevals-link-sumbuddy-refly-guizang-v3-claude4.html"
-echo "- openevals-link-refly-guizang-v3-claude4.html"
-echo "- openevals-link-refly-guizang-v2-claude4.html"
+echo "访问信息："
+echo "• 主页面: http://$DOMAIN/showpage/"
+echo "• API接口: http://$DOMAIN/showpage/api/pages"
+echo "• 配置文件: /etc/nginx/sites-available/case.conf"
+echo ""
+echo "架构说明："
+echo "• 使用主配置文件 case.conf 管理所有静态案例"
+echo "• 通过路径 /showpage 访问 ShowPage 案例"
+echo "• 后续案例将添加到同一配置文件中"
 echo "=========================================" 
