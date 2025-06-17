@@ -3,7 +3,7 @@
 # 部署脚本 - 将HTML文件上传到远程服务器并配置nginx
 # 服务器信息
 SERVER_HOST="aliyun-ecs-showpage"  # 使用SSH配置别名
-REMOTE_PATH="/var/www/html/showpage"
+REMOTE_PATH="/root/www/showpage"
 DOMAIN="case.coderboot.xyz"
 
 echo "========================================="
@@ -37,7 +37,7 @@ fi
 
 # 3. 设置文件权限
 echo "3. 设置文件权限..."
-ssh $SERVER_HOST "chmod 644 $REMOTE_PATH/*.html && chown -R www-data:www-data $REMOTE_PATH"
+ssh $SERVER_HOST "chmod 644 $REMOTE_PATH/*.html && chown -R root:root $REMOTE_PATH && chmod 755 /root /root/www && chmod 755 $REMOTE_PATH"
 
 if [ $? -eq 0 ]; then
     echo "✓ 文件权限设置成功"
@@ -59,6 +59,7 @@ else
 server {
     listen 80;
     server_name $DOMAIN;
+    root /var/www/html;
     
     # 启用gzip压缩
     gzip on;
@@ -72,12 +73,15 @@ server {
     }
     
     # ========== ShowPage 案例 ==========
-    # showpage 应用路径
+    # showpage 应用路径 - 使用符号链接避免alias问题
+    # 文件实际路径：/root/www/showpage/ (通过符号链接映射)
+    # 访问地址：http://$DOMAIN/showpage/
+    # 重要：需要先创建符号链接 ln -sf /root/www/showpage /var/www/html/showpage
     location /showpage {
-        root /var/www/html;
+        # 使用root + try_files的方式，避免nginx alias配置的坑
         try_files \$uri \$uri/ \$uri/index.html =404;
         
-        # 设置安全头
+        # 安全头部配置，防止XSS、点击劫持等攻击
         add_header X-Frame-Options \"SAMEORIGIN\" always;
         add_header X-XSS-Protection \"1; mode=block\" always;
         add_header X-Content-Type-Options \"nosniff\" always;
@@ -85,7 +89,9 @@ server {
         add_header Content-Security-Policy \"default-src 'self' http: https: data: blob: 'unsafe-inline'\" always;
     }
     
-    # showpage 页面列表接口
+    # showpage 页面列表API接口
+    # 返回当前可用的HTML页面列表（JSON格式）
+    # 访问地址：http://$DOMAIN/showpage/api/pages
     location /showpage/api/pages {
         default_type application/json;
         return 200 '{
@@ -99,29 +105,38 @@ server {
         }';
     }
     
-    # ========== 通用配置 ==========
-    # 静态文件缓存策略
-    location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 30d;
-        add_header Cache-Control \"public, no-transform\";
+    # ========== 缓存策略 ==========
+    # 静态资源缓存（图片、CSS、JS等）
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control \"public, immutable\";
     }
     
-    # HTML文件不缓存，确保内容更新
+    # HTML文件不缓存，确保内容更新能及时生效
     location ~* \.html$ {
         expires -1;
         add_header Cache-Control \"no-store, no-cache, must-revalidate, proxy-revalidate\";
     }
     
-    # 错误页面
+    # ========== 错误页面和日志 ==========
+    # 自定义错误页面
     error_page 404 /404.html;
     error_page 500 502 503 504 /50x.html;
     
-    # 日志配置
+    # 日志文件配置
     access_log /var/log/nginx/$DOMAIN.access.log;
     error_log /var/log/nginx/$DOMAIN.error.log;
     
-    # 禁止访问隐藏文件
+    # ========== 安全配置 ==========
+    # 禁止访问隐藏文件（以.开头的文件）
     location ~ /\\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    # 禁止访问备份文件
+    location ~ ~$ {
         deny all;
         access_log off;
         log_not_found off;
@@ -135,6 +150,17 @@ EOF"
         echo "✗ 主配置文件创建失败"
         exit 1
     fi
+fi
+
+# 4.5. 创建符号链接
+echo "4.5. 创建符号链接..."
+ssh $SERVER_HOST "mkdir -p /var/www/html && rm -rf /var/www/html/showpage && ln -sf $REMOTE_PATH /var/www/html/showpage"
+
+if [ $? -eq 0 ]; then
+    echo "✓ 符号链接创建成功 ($REMOTE_PATH -> /var/www/html/showpage)"
+else
+    echo "✗ 符号链接创建失败"
+    exit 1
 fi
 
 # 5. 启用网站配置
