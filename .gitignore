@@ -1,0 +1,35 @@
+# 操作系统生成的文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 编辑器和IDE生成的文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+
+# 备份文件
+backup/
+*.bak
+
+# 密钥和敏感信息
+*.key
+*.pem
+.env
+
+# 缓存目录
+.cache/
+node_modules/ 

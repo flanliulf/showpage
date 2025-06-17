@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft Promptbase - AI提示词管理平台</title>
+
+    <!-- 110 网页生成 Case：Promptbase 项目介绍（链接 + Refly解析链接 + 归藏 V2 + Claude Sonnet 4） -->
+    
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+
+        [data-theme="dark"] {
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --border-color: #374151;
+        }
+
+        * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+        .stagger-4 { animation-delay: 0.4s; }
+
+        .code-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .feature-icon {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-link {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.125rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-8">
+                    <div class="flex items-center space-x-2">
+                        <i class="fab fa-microsoft text-2xl text-blue-600"></i>
+                        <span class="text-xl font-bold">Promptbase</span>
+                    </div>
+                    <div class="hidden md:flex space-x-6">
+                        <a href="#features" class="nav-link text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2">功能特性</a>
+                        <a href="#architecture" class="nav-link text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2">架构设计</a>
+                        <a href="#guide" class="nav-link text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2">使用指南</a>
+                        <a href="#practices" class="nav-link text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2">最佳实践</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                    </button>
+                    <a href="https://github.com/microsoft/promptbase" target="_blank" class="btn-primary text-white px-4 py-2 rounded-lg font-medium">
+                        <i class="fab fa-github mr-2"></i>GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-24 pb-16 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h1 class="hero-title text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 fade-in">
+                    Microsoft <span class="gradient-bg bg-clip-text text-transparent">Promptbase</span>
+                </h1>
+                <p class="hero-subtitle text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto fade-in stagger-1">
+                    企业级AI提示词管理平台，为您的团队提供专业的提示词版本控制、协作和最佳实践指导
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center fade-in stagger-2">
+                    <button class="btn-primary text-white px-8 py-3 rounded-lg font-medium text-lg">
+                        <i class="fas fa-rocket mr-2"></i>立即开始
+                    </button>
+                    <button class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-8 py-3 rounded-lg font-medium text-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <i class="fas fa-play mr-2"></i>观看演示
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 fade-in stagger-3">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">10K+</div>
+                    <div class="text-gray-600 dark:text-gray-400">活跃用户</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-purple-600 dark:text-purple-400">50K+</div>
+                    <div class="text-gray-600 dark:text-gray-400">提示词模板</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-cyan-600 dark:text-cyan-400">99.9%</div>
+                    <div class="text-gray-600 dark:text-gray-400">系统可用性</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-green-600 dark:text-green-400">24/7</div>
+                    <div class="text-gray-600 dark:text-gray-400">技术支持</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">核心功能特性</h2>
+                <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    为AI时代的企业提供完整的提示词生命周期管理解决方案
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card-hover bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="feature-icon text-4xl mb-4">
+                        <i class="fas fa-code-branch"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-900 dark:text-white">版本控制</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        类似Git的版本管理系统，追踪每个提示词的变更历史，支持分支合并和回滚操作
+                    </p>
+                    <div class="progress-bar" style="width: 95%"></div>
+                </div>
+
+                <div class="card-hover bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="feature-icon text-4xl mb-4">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-900 dark:text-white">团队协作</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        多人协作编辑，实时同步更新，权限管理和审核流程，确保提示词质量
+                    </p>
+                    <div class="progress-bar" style="width: 90%"></div>
+                </div>
+
+                <div class="card-hover bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="feature-icon text-4xl mb-4">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-900 dark:text-white">模板库</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        丰富的行业模板库，涵盖营销、客服、技术等多个领域的最佳实践模板
+                    </p>
+                    <div class="progress-bar" style="width: 88%"></div>
+                </div>
+
+                <div class="card-hover bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="feature-icon text-4xl mb-4">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-900 dark:text-white">性能分析</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        详细的使用统计和效果分析，帮助优化提示词性能，提升AI输出质量
+                    </p>
+                    <div class="progress-bar" style="width: 92%"></div>
+                </div>
+
+                <div class="card-hover bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="feature-icon text-4xl mb-4">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-900 dark:text-white">安全合规</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        企业级安全保障，数据加密传输，符合GDPR、SOC2等国际安全标准
+                    </p>
+                    <div class="progress-bar" style="width: 96%"></div>
+                </div>
+
+                <div class="card-hover bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="feature-icon text-4xl mb-4">
+                        <i class="fas fa-plug"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-900 dark:text-white">API集成</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        RESTful API和SDK支持，轻松集成到现有系统，支持多种编程语言
+                    </p>
+                    <div class="progress-bar" style="width: 94%"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture" class="py-20 bg-gray-50 dark:bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">系统架构</h2>
+                <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    基于云原生架构设计，确保高可用性、可扩展性和安全性
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                            <span class="text-indigo-600 dark:text-indigo-400 font-semibold">1</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">提示词创建</h3>
+                            <p class="text-gray-600 dark:text-gray-300">使用直观的编辑器创建和编辑提示词，支持Markdown格式和实时预览</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                            <span class="text-purple-600 dark:text-purple-400 font-semibold">2</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">版本管理</h3>
+                            <p class="text-gray-600 dark:text-gray-300">自动版本控制，记录每次修改，支持分支管理和合并冲突解决</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-cyan-100 dark:bg-cyan-900 rounded-full flex items-center justify-center">
+                            <span class="text-cyan-600 dark:text-cyan-400 font-semibold">3</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">测试验证</h3>
+                            <p class="text-gray-600 dark:text-gray-300">内置测试框架，支持A/B测试和性能基准测试，确保提示词质量</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                            <span class="text-green-600 dark:text-green-400 font-semibold">4</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">部署发布</h3>
+                            <p class="text-gray-600 dark:text-gray-300">一键部署到生产环境，支持灰度发布和自动回滚机制</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="text-center mb-6">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">工作流程图</h3>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                            <span class="text-indigo-700 dark:text-indigo-300 font-medium">开发环境</span>
+                            <i class="fas fa-arrow-down text-indigo-600 dark:text-indigo-400"></i>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                            <span class="text-purple-700 dark:text-purple-300 font-medium">测试环境</span>
+                            <i class="fas fa-arrow-down text-purple-600 dark:text-purple-400"></i>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
+                            <span class="text-cyan-700 dark:text-cyan-300 font-medium">预发布环境</span>
+                            <i class="fas fa-arrow-down text-cyan-600 dark:text-cyan-400"></i>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <span class="text-green-700 dark:text-green-300 font-medium">生产环境</span>
+                            <i class="fas fa-check text-green-600 dark:text-green-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Usage Guide Section -->
+    <section id="guide" class="py-20 bg-white dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">快速开始指南</h2>
+                <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    三步即可开始使用Promptbase，快速提升您的AI应用效果
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div class="space-y-8">
+                    <div class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-6 rounded-2xl">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                            <i class="fas fa-download text-indigo-600 dark:text-indigo-400 mr-3"></i>
+                            步骤 1: 安装配置
+                        </h3>
+                        <div class="code-block">
+                            <div class="text-gray-600 dark:text-gray-400 mb-2"># 使用npm安装</div>
+                            <div class="text-blue-600 dark:text-blue-400">npm install @microsoft/promptbase</div>
+                            <div class="text-gray-600 dark:text-gray-400 mt-4 mb-2"># 或使用pip安装</div>
+                            <div class="text-blue-600 dark:text-blue-400">pip install promptbase</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-6 rounded-2xl">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                            <i class="fas fa-cog text-purple-600 dark:text-purple-400 mr-3"></i>
+                            步骤 2: 初始化项目
+                        </h3>
+                        <div class="code-block">
+                            <div class="text-gray-600 dark:text-gray-400 mb-2"># 创建新项目</div>
+                            <div class="text-green-600 dark:text-green-400">promptbase init my-prompts</div>
+                            <div class="text-gray-600 dark:text-gray-400 mt-4 mb-2"># 配置API密钥</div>
+                            <div class="text-green-600 dark:text-green-400">promptbase config set api-key YOUR_API_KEY</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 p-6 rounded-2xl">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                            <i class="fas fa-rocket text-cyan-600 dark:text-cyan-400 mr-3"></i>
+                            步骤 3: 创建提示词
+                        </h3>
+                        <div class="code-block">
+                            <div class="text-gray-600 dark:text-gray-400 mb-2"># 创建新的提示词</div>
+                            <div class="text-orange-600 dark:text-orange-400">promptbase create customer-service</div>
+                            <div class="text-gray-600 dark:text-gray-400 mt-4 mb-2"># 部署到生产环境</div>
+                            <div class="text-orange-600 dark:text-orange-400">promptbase deploy --env production</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">示例提示词模板</h3>
+                        <div class="code-block">
+                            <div class="text-gray-600 dark:text-gray-400 mb-2">// customer-service.prompt</div>
+                            <div class="text-gray-800 dark:text-gray-200">
+                                <div class="text-blue-600 dark:text-blue-400">---</div>
+                                <div><span class="text-purple-600 dark:text-purple-400">name:</span> 客户服务助手</div>
+                                <div><span class="text-purple-600 dark:text-purple-400">version:</span> 1.0.0</div>
+                                <div><span class="text-purple-600 dark:text-purple-400">tags:</span> [customer-service, support]</div>
+                                <div class="text-blue-600 dark:text-blue-400">---</div>
+                                <div class="mt-4">
+                                    <div>你是一位专业的客户服务代表。</div>
+                                    <div>请以友好、耐心的态度回答客户问题。</div>
+                                    <div class="mt-2">
+                                        <div><span class="text-green-600 dark:text-green-400">客户问题:</span> {{customer_question}}</div>
+                                        <div><span class="text-green-600 dark:text-green-400">产品信息:</span> {{product_info}}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-6 rounded-2xl">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                            <i class="fas fa-lightbulb text-green-600 dark:text-green-400 mr-2"></i>
+                            专业提示
+                        </h3>
+                        <ul class="space-y-2 text-gray-600 dark:text-gray-300">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1 text-sm"></i>
+                                使用变量模板提高提示词的复用性
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1 text-sm"></i>
+                                定期测试和优化提示词性能
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-1 text-sm"></i>
+                                使用版本标签管理不同环境的提示词
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Best Practices Section -->
+    <section id="practices" class="py-20 bg-gray-50 dark:bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">最佳实践</h2>
+                <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    基于Microsoft内部团队的实践经验，为您提供专业的提示词工程指导
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card-hover bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="text-3xl mb-4">🎯</div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">明确目标</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        在编写提示词前，明确定义期望的输出格式、风格和内容要求
+                    </p>
+                    <div class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                        <i class="fas fa-arrow-right mr-1"></i>查看详细指南
+                    </div>
+                </div>
+
+                <div class="card-hover bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="text-3xl mb-4">🔄</div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">迭代优化</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        通过A/B测试和用户反馈，持续优化提示词的效果和准确性
+                    </p>
+                    <div class="text-sm text-purple-600 dark:text-purple-400 font-medium">
+                        <i class="fas fa-arrow-right mr-1"></i>学习优化技巧
+                    </div>
+                </div>
+
+                <div class="card-hover bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="text-3xl mb-4">📊</div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">数据驱动</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        使用量化指标评估提示词性能，基于数据做出优化决策
+                    </p>
+                    <div class="text-sm text-cyan-600 dark:text-cyan-400 font-medium">
+                        <i class="fas fa-arrow-right mr-1"></i>了解评估方法
+                    </div>
+                </div>
+
+                <div class="card-hover bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="text-3xl mb-4">🛡️</div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">安全考虑</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        实施提示词注入防护，确保AI输出的安全性和合规性
+                    </p>
+                    <div class="text-sm text-red-600 dark:text-red-400 font-medium">
+                        <i class="fas fa-arrow-right mr-1"></i>安全最佳实践
+                    </div>
+                </div>
+
+                <div class="card-hover bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="text-3xl mb-4">👥</div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">团队协作</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        建立清晰的协作流程，确保团队成员能够高效地共同维护提示词库
+                    </p>
+                    <div class="text-sm text-green-600 dark:text-green-400 font-medium">
+                        <i class="fas fa-arrow-right mr-1"></i>协作工作流
+                    </div>
+                </div>
+
+                <div class="card-hover bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="text-3xl mb-4">📚</div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">文档规范</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        维护完整的提示词文档，包括使用场景、参数说明和示例
+                    </p>
+                    <div class="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                        <i class="fas fa-arrow-right mr-1"></i>文档模板
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-600">
+        <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-white mb-6">
+                准备好开始您的AI提示词管理之旅了吗？
+            </h2>
+            <p class="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
+                加入全球数万名开发者，使用Microsoft Promptbase提升您的AI应用效果
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-rocket mr-2"></i>免费开始使用
+                </button>
+                <button class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-white hover:text-indigo-600 transition-colors">
+                    <i class="fas fa-calendar mr-2"></i>预约演示
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="col-span-2">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fab fa-microsoft text-2xl text-blue-400"></i>
+                        <span class="text-xl font-bold">Microsoft Promptbase</span>
+                    </div>
+                    <p class="text-gray-400 mb-6 max-w-md">
+                        企业级AI提示词管理平台，为您的团队提供专业的提示词版本控制、协作和最佳实践指导。
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-linkedin text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-youtube text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">产品</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">功能特性</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">定价方案</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">API文档</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">集成指南</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">支持</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">帮助中心</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">社区论坛</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">联系我们</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">状态页面</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 mt-12 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="text-gray-400 mb-4 md:mb-0">
+                        © 2024 Microsoft Corporation. 保留所有权利。
+                    </div>
+                    <div class="flex space-x-6 text-gray-400 text-sm">
+                        <a href="#" class="hover:text-white transition-colors">隐私政策</a>
+                        <a href="#" class="hover:text-white transition-colors">服务条款</a>
+                        <a href="#" class="hover:text-white transition-colors">Cookie政策</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Author Info -->
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <div class="bg-gray-800 rounded-2xl p-6 max-w-md mx-auto">
+                    <h3 class="text-lg font-semibold mb-3">作者信息</h3>
+                    <p class="text-gray-400 mb-4">Microsoft AI 团队</p>
+                    <div class="flex justify-center space-x-4 mb-4">
+                        <a href="https://github.com/microsoft" target="_blank" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
+                        <a href="https://twitter.com/microsoft" target="_blank" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="https://linkedin.com/company/microsoft" target="_blank" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-linkedin text-xl"></i>
+                        </a>
+                    </div>
+                    <p class="text-sm text-gray-500">© 2024 Microsoft Corporation</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+
+        // Check for saved theme preference or default to system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        const currentTheme = savedTheme || systemTheme;
+
+        html.setAttribute('data-theme', currentTheme);
+        if (currentTheme === 'dark') {
+            html.classList.add('dark');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const isDark = html.classList.contains('dark');
+            
+            if (isDark) {
+                html.classList.remove('dark');
+                html.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all fade-in elements
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Add scroll effect to navigation
+        let lastScrollTop = 0;
+        const nav = document.querySelector('nav');
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                nav.style.transform = 'translateY(-100%)';
+            } else {
+                nav.style.transform = 'translateY(0)';
+            }
+            
+            lastScrollTop = scrollTop;
+        });
+
+        // Add loading animation to buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!this.classList.contains('loading')) {
+                    this.classList.add('loading');
+                    
+                    // Simulate loading
+                    setTimeout(() => {
+                        this.classList.remove('loading');
+                    }, 2000);
+                }
+            });
+        });
+
+        // Progress bar animation
+        const progressBars = document.querySelectorAll('.progress-bar');
+        const progressObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const bar = entry.target;
+                    const width = bar.style.width;
+                    bar.style.width = '0%';
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 200);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        progressBars.forEach(bar => {
+            progressObserver.observe(bar);
+        });
+
+        // Mobile menu toggle (if needed)
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+
+        // Add parallax effect to hero section
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('.gradient-bg');
+            if (parallax) {
+                const speed = scrolled * 0.5;
+                parallax.style.transform = `translateY(${speed}px)`;
+            }
+        });
+
+        // Copy code functionality
+        document.querySelectorAll('.code-block').forEach(block => {
+            block.addEventListener('click', () => {
+                const text = block.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    // Show copy feedback
+                    const feedback = document.createElement('div');
+                    feedback.textContent = '已复制到剪贴板';
+                    feedback.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg z-50';
+                    document.body.appendChild(feedback);
+                    
+                    setTimeout(() => {
+                        feedback.remove();
+                    }, 2000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

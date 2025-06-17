@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenEvals：重新定义大语言模型评估标准</title>
+
+    <!-- 110 网页生成 Case：使用 OpenEvals 评估大语言模型（链接 + Refly 解析链接 + 归藏 V3 + Claude Sonnet 4） -->
+    
+    <!-- External Dependencies -->
+    <link href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-100-M/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/mermaid/8.14.0/mermaid.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --border-color: #e2e8f0;
+            --shadow-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-heavy: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        [data-theme="dark"] {
+            --text-primary: #f7fafc;
+            --text-secondary: #cbd5e0;
+            --bg-primary: #1a202c;
+            --bg-secondary: #2d3748;
+            --border-color: #4a5568;
+        }
+
+        * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Noto Sans SC', Tahoma, Arial, Roboto, "Droid Sans", "Helvetica Neue", "Droid Sans Fallback", "Heiti SC", "Hiragino Sans GB", Simsun, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        .serif-font {
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .hero-section {
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .floating-element {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .gradient-text {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-divider {
+            height: 2px;
+            background: var(--accent-gradient);
+            border-radius: 1px;
+            margin: 4rem 0;
+        }
+
+        .drop-cap {
+            float: left;
+            font-size: 4rem;
+            line-height: 3rem;
+            padding-right: 0.5rem;
+            padding-top: 0.25rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--accent-gradient);
+            z-index: 1001;
+            transition: width 0.3s ease;
+        }
+
+        .mermaid {
+            background: transparent !important;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 0.375rem;
+            top: 1.5rem;
+            width: 2px;
+            height: calc(100% + 1rem);
+            background: var(--border-color);
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                min-height: 80vh;
+            }
+            
+            .theme-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .drop-cap {
+                font-size: 3rem;
+                line-height: 2.5rem;
+            }
+        }
+
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+
+    <!-- Hero Section -->
+    <section class="hero-section flex items-center justify-center relative">
+        <div class="container mx-auto px-6 text-center text-white relative z-10">
+            <div class="floating-element">
+                <h1 class="text-6xl md:text-8xl font-bold mb-6 serif-font">
+                    OpenEvals
+                </h1>
+                <p class="text-2xl md:text-3xl mb-8 font-light">
+                    重新定义大语言模型评估标准
+                </p>
+                <div class="text-lg md:text-xl mb-12 max-w-4xl mx-auto leading-relaxed">
+                    探索 LangChain 如何通过 OpenEvals 框架，为大语言模型评估带来革命性的透明度和可重复性
+                </div>
+                <div class="flex justify-center space-x-4">
+                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-6 py-3">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        评估框架
+                    </div>
+                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-6 py-3">
+                        <i class="fas fa-code mr-2"></i>
+                        开源工具
+                    </div>
+                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-6 py-3">
+                        <i class="fas fa-users mr-2"></i>
+                        社区驱动
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Floating Elements -->
+        <div class="absolute top-20 left-10 w-20 h-20 bg-white bg-opacity-10 rounded-full floating-element" style="animation-delay: -2s;"></div>
+        <div class="absolute bottom-20 right-10 w-16 h-16 bg-white bg-opacity-10 rounded-full floating-element" style="animation-delay: -4s;"></div>
+        <div class="absolute top-1/2 left-20 w-12 h-12 bg-white bg-opacity-10 rounded-full floating-element" style="animation-delay: -1s;"></div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-16">
+        
+        <!-- Introduction Section -->
+        <section class="scroll-reveal mb-20">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-4xl font-bold mb-8 gradient-text serif-font">引言：评估的挑战</h2>
+                <div class="text-lg leading-relaxed">
+                    <span class="drop-cap serif-font">在</span>
+                    人工智能快速发展的今天，大语言模型（LLM）的评估已成为一个关键挑战。传统的评估方法往往缺乏透明度，难以重现，且无法全面反映模型在实际应用中的表现。LangChain 团队深刻认识到这一问题，推出了 OpenEvals 框架，旨在为 LLM 评估建立新的行业标准。
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Core Concepts Visualization -->
+        <section class="scroll-reveal mb-20">
+            <h2 class="text-4xl font-bold mb-12 text-center gradient-text serif-font">OpenEvals 核心架构</h2>
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
+                <div class="mermaid" id="coreArchitecture">
+                    graph TB
+                        A[OpenEvals 框架] --> B[评估数据集]
+                        A --> C[评估指标]
+                        A --> D[模型接口]
+                        A --> E[结果分析]
+                        
+                        B --> B1[多样化任务]
+                        B --> B2[真实场景]
+                        B --> B3[标准化格式]
+                        
+                        C --> C1[准确性指标]
+                        C --> C2[效率指标]
+                        C --> C3[安全性指标]
+                        
+                        D --> D1[统一API]
+                        D --> D2[多模型支持]
+                        D --> D3[版本控制]
+                        
+                        E --> E1[可视化报告]
+                        E --> E2[对比分析]
+                        E --> E3[趋势追踪]
+                        
+                        style A fill:#667eea,stroke:#333,stroke-width:3px,color:#fff
+                        style B fill:#4facfe,stroke:#333,stroke-width:2px,color:#fff
+                        style C fill:#f093fb,stroke:#333,stroke-width:2px,color:#fff
+                        style D fill:#43e97b,stroke:#333,stroke-width:2px,color:#fff
+                        style E fill:#fa709a,stroke:#333,stroke-width:2px,color:#fff
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Features -->
+        <section class="scroll-reveal mb-20">
+            <h2 class="text-4xl font-bold mb-12 text-center gradient-text serif-font">核心特性</h2>
+            <div class="feature-grid">
+                <div class="card-hover bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-4xl mb-4 text-blue-500">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">透明度</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        所有评估过程、数据集和指标都是开源的，确保评估结果的可验证性和可重现性。
+                    </p>
+                </div>
+                
+                <div class="card-hover bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-4xl mb-4 text-green-500">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">可重现性</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        标准化的评估流程和环境配置，确保不同团队能够获得一致的评估结果。
+                    </p>
+                </div>
+                
+                <div class="card-hover bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-4xl mb-4 text-purple-500">
+                        <i class="fas fa-puzzle-piece"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">模块化设计</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        灵活的架构允许用户根据需求自定义评估任务、指标和数据集。
+                    </p>
+                </div>
+                
+                <div class="card-hover bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-4xl mb-4 text-red-500">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">社区驱动</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        鼓励社区贡献新的评估任务和指标，共同推动评估标准的发展。
+                    </p>
+                </div>
+                
+                <div class="card-hover bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-4xl mb-4 text-yellow-500">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">全面评估</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        涵盖准确性、效率、安全性、公平性等多个维度的综合评估体系。
+                    </p>
+                </div>
+                
+                <div class="card-hover bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-4xl mb-4 text-indigo-500">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">易于使用</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        简洁的 API 和详细的文档，让开发者能够快速上手并集成到现有工作流程中。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Implementation Timeline -->
+        <section class="scroll-reveal mb-20">
+            <h2 class="text-4xl font-bold mb-12 text-center gradient-text serif-font">实施路线图</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="timeline-item">
+                    <h3 class="text-2xl font-bold mb-2">第一阶段：基础框架</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        建立核心评估引擎，定义标准化的数据格式和 API 接口。
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm">核心引擎</span>
+                        <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm">API 设计</span>
+                        <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm">数据标准</span>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-2xl font-bold mb-2">第二阶段：评估任务扩展</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        添加多样化的评估任务，涵盖不同领域和应用场景。
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm">任务库</span>
+                        <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm">领域适配</span>
+                        <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm">场景覆盖</span>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-2xl font-bold mb-2">第三阶段：社区生态</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        建立开放的社区平台，鼓励贡献和协作。
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full text-sm">社区平台</span>
+                        <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full text-sm">贡献机制</span>
+                        <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full text-sm">协作工具</span>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-2xl font-bold mb-2">第四阶段：企业级功能</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        提供企业级的评估解决方案，支持大规模部署和定制化需求。
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-3 py-1 rounded-full text-sm">企业版</span>
+                        <span class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-3 py-1 rounded-full text-sm">定制化</span>
+                        <span class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-3 py-1 rounded-full text-sm">规模化</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Deep Dive -->
+        <section class="scroll-reveal mb-20">
+            <h2 class="text-4xl font-bold mb-12 text-center gradient-text serif-font">技术深度解析</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center">
+                        <i class="fas fa-cogs mr-3 text-blue-500"></i>
+                        评估引擎架构
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h4 class="font-semibold">任务调度器</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">负责管理和调度各种评估任务的执行</p>
+                        </div>
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <h4 class="font-semibold">模型适配器</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">提供统一接口支持不同的 LLM 模型</p>
+                        </div>
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <h4 class="font-semibold">指标计算器</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">实现各种评估指标的计算和分析</p>
+                        </div>
+                        <div class="border-l-4 border-red-500 pl-4">
+                            <h4 class="font-semibold">结果聚合器</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">汇总和分析评估结果，生成报告</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center">
+                        <i class="fas fa-database mr-3 text-green-500"></i>
+                        数据管理系统
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h4 class="font-semibold">数据集管理</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">版本控制和数据集的生命周期管理</p>
+                        </div>
+                        <div class="border-l-4 border-green-500 pl-4">
+                            <h4 class="font-semibold">缓存机制</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">智能缓存策略提升评估效率</p>
+                        </div>
+                        <div class="border-l-4 border-purple-500 pl-4">
+                            <h4 class="font-semibold">数据验证</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">确保数据质量和格式一致性</p>
+                        </div>
+                        <div class="border-l-4 border-red-500 pl-4">
+                            <h4 class="font-semibold">隐私保护</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">内置隐私保护和数据安全机制</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Use Cases -->
+        <section class="scroll-reveal mb-20">
+            <h2 class="text-4xl font-bold mb-12 text-center gradient-text serif-font">应用场景</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="card-hover bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-2xl p-6 border border-blue-200 dark:border-blue-700">
+                    <div class="text-3xl mb-4 text-blue-600">
+                        <i class="fas fa-university"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">学术研究</h3>
+                    <p class="text-gray-700 dark:text-gray-300 text-sm">
+                        为研究人员提供标准化的评估工具，促进学术界的研究进展和成果对比。
+                    </p>
+                </div>
+                
+                <div class="card-hover bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-2xl p-6 border border-green-200 dark:border-green-700">
+                    <div class="text-3xl mb-4 text-green-600">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">企业应用</h3>
+                    <p class="text-gray-700 dark:text-gray-300 text-sm">
+                        帮助企业选择和优化 LLM 模型，确保在生产环境中的可靠性和性能。
+                    </p>
+                </div>
+                
+                <div class="card-hover bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-2xl p-6 border border-purple-200 dark:border-purple-700">
+                    <div class="text-3xl mb-4 text-purple-600">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">模型开发</h3>
+                    <p class="text-gray-700 dark:text-gray-300 text-sm">
+                        为模型开发者提供全面的评估反馈，指导模型的改进和优化方向。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Future Outlook -->
+        <section class="scroll-reveal mb-20">
+            <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl p-12 text-white text-center">
+                <h2 class="text-4xl font-bold mb-6 serif-font">未来展望</h2>
+                <p class="text-xl mb-8 max-w-4xl mx-auto leading-relaxed">
+                    OpenEvals 不仅仅是一个评估工具，更是推动整个 AI 行业标准化和透明化的重要力量。
+                    我们相信，通过开放、协作的方式，能够建立更加公正、全面的 LLM 评估体系。
+                </p>
+                <div class="flex justify-center space-x-8 text-sm">
+                    <div class="flex items-center">
+                        <i class="fas fa-globe mr-2"></i>
+                        全球标准
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-handshake mr-2"></i>
+                        行业协作
+                    </div>
+                    <div class="fas fa-lightbulb mr-2"></i>
+                        持续创新
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Further Reading -->
+        <section class="scroll-reveal mb-20">
+            <h2 class="text-4xl font-bold mb-12 text-center gradient-text serif-font">延伸阅读</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card-hover bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-2xl text-blue-500">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold mb-2">《Evaluating Large Language Models》</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                                OpenAI 团队关于大语言模型评估的经典论文，奠定了现代 LLM 评估的理论基础。
+                            </p>
+                            <span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">论文</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-hover bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-2xl text-green-500">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold mb-2">《AI Evaluation Frameworks》</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                                全面介绍各种 AI 评估框架的设计原理和实践方法。
+                            </p>
+                            <span class="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded">专著</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-hover bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-2xl text-purple-500">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold mb-2">《Benchmarking in NLP》</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                                自然语言处理领域基准测试的最佳实践和标准化方法。
+                            </p>
+                            <span class="text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded">综述</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-hover bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-2xl text-red-500">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold mb-2">《Metrics for Language Models》</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                                深入探讨语言模型评估指标的设计和选择策略。
+                            </p>
+                            <span class="text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-1 rounded">研究</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-hover bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-2xl text-yellow-500">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold mb-2">《Open Source AI Tools》</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                                开源 AI 工具生态系统的发展趋势和社区建设经验。
+                            </p>
+                            <span class="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded">指南</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-6 text-center">
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold mb-4">加入 OpenEvals 社区</h3>
+                <p class="text-gray-300 mb-6">
+                    与全球开发者一起，共同推动 LLM 评估标准的发展
+                </p>
+                <div class="flex justify-center space-x-6">
+                    <a href="#" class="text-2xl hover:text-blue-400 transition-colors">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="#" class="text-2xl hover:text-blue-400 transition-colors">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-2xl hover:text-blue-400 transition-colors">
+                        <i class="fab fa-discord"></i>
+                    </a>
+                    <a href="#" class="text-2xl hover:text-blue-400 transition-colors">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 pt-8">
+                <p class="text-gray-400">
+                    © 2024 LangChain OpenEvals. 本页面基于 LangChain 博客内容创建，仅用于展示设计效果。
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Management
+        class ThemeManager {
+            constructor() {
+                this.theme = localStorage.getItem('theme') || 
+                    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                this.init();
+            }
+
+            init() {
+                this.applyTheme();
+                this.bindEvents();
+            }
+
+            applyTheme() {
+                document.documentElement.setAttribute('data-theme', this.theme);
+                const icon = document.getElementById('themeIcon');
+                icon.className = this.theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+
+            toggle() {
+                this.theme = this.theme === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', this.theme);
+                this.applyTheme();
+            }
+
+            bindEvents() {
+                document.getElementById('themeToggle').addEventListener('click', () => {
+                    this.toggle();
+                });
+
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    if (!localStorage.getItem('theme')) {
+                        this.theme = e.matches ? 'dark' : 'light';
+                        this.applyTheme();
+                    }
+                });
+            }
+        }
+
+        // Scroll Progress
+        class ScrollProgress {
+            constructor() {
+                this.progressBar = document.getElementById('progressBar');
+                this.init();
+            }
+
+            init() {
+                window.addEventListener('scroll', () => {
+                    const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+                    this.progressBar.style.width = `${Math.min(scrolled, 100)}%`;
+                });
+            }
+        }
+
+        // Scroll Reveal Animation
+        class ScrollReveal {
+            constructor() {
+                this.elements = document.querySelectorAll('.scroll-reveal');
+                this.init();
+            }
+
+            init() {
+                this.observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('revealed');
+                        }
+                    });
+                }, {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -50px 0px'
+                });
+
+                this.elements.forEach(el => {
+                    this.observer.observe(el);
+                });
+            }
+        }
+
+        // Mermaid Configuration
+        mermaid.initialize({
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#ffffff',
+                primaryBorderColor: '#333333',
+                lineColor: '#333333',
+                secondaryColor: '#4facfe',
+                tertiaryColor: '#f093fb',
+                background: '#ffffff',
+                mainBkg: '#667eea',
+                secondBkg: '#4facfe',
+                tertiaryBkg: '#f093fb'
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        // Initialize all components
+        document.addEventListener('DOMContentLoaded', () => {
+            new ThemeManager();
+            new ScrollProgress();
+            new ScrollReveal();
+            
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Add pulse animation to important elements
+            const importantElements = document.querySelectorAll('.gradient-text');
+            importantElements.forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    el.classList.add('pulse-animation');
+                });
+                el.addEventListener('mouseleave', () => {
+                    el.classList.remove('pulse-animation');
+                });
+            });
+        });
+
+        // Performance optimization
+        let ticking = false;
+        function updateOnScroll() {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    // Scroll-based animations can be added here
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }
+        window.addEventListener('scroll', updateOnScroll);
+    </script>
+</body>
+</html>

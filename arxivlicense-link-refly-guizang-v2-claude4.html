@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>arXiv 许可证指南 - 学术开放获取许可证完整指南</title>
+    <meta name="description" content="全面了解arXiv平台支持的各种开放获取许可证，包括Creative Commons、MIT、Apache等许可证的详细说明和选择指南">
+    
+    <!-- 110 网页生成 Case：arXiv 许可证指南（链接 + Refly解析链接 + 归藏 V2 + Claude Sonnet 4） -->
+
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+        
+        [data-theme="dark"] {
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --border-color: #374151;
+        }
+        
+        * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .license-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .cc-badge { background-color: #f59e0b; color: white; }
+        .mit-badge { background-color: #10b981; color: white; }
+        .apache-badge { background-color: #ef4444; color: white; }
+        .bsd-badge { background-color: #8b5cf6; color: white; }
+        .gpl-badge { background-color: #3b82f6; color: white; }
+        
+        .comparison-table {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .comparison-table th {
+            background-color: var(--bg-secondary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .check-icon { color: #10b981; }
+        .cross-icon { color: #ef4444; }
+        .partial-icon { color: #f59e0b; }
+        
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--bg-secondary);
+        }
+        
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 2px;
+            background-color: var(--primary-color);
+            border-radius: 1px;
+        }
+        
+        .hero-pattern {
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+            margin: 3rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="sticky top-0 z-50 backdrop-blur-md bg-opacity-80" style="background-color: var(--bg-primary);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-file-contract text-2xl" style="color: var(--primary-color);"></i>
+                        <span class="text-xl font-bold">arXiv 许可证指南</span>
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#overview" class="nav-link">概述</a>
+                    <a href="#licenses" class="nav-link">许可证类型</a>
+                    <a href="#comparison" class="nav-link">对比分析</a>
+                    <a href="#guide" class="nav-link">选择指南</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button id="themeToggle" class="p-2 rounded-lg hover:bg-opacity-10 hover:bg-gray-500">
+                        <i class="fas fa-moon text-lg"></i>
+                    </button>
+                    <button class="md:hidden p-2 rounded-lg hover:bg-opacity-10 hover:bg-gray-500">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <section class="relative gradient-bg hero-pattern py-20 lg:py-32">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="fade-in">
+                <h1 class="text-4xl lg:text-6xl font-bold text-white mb-6">
+                    arXiv 许可证
+                    <span class="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+                        完整指南
+                    </span>
+                </h1>
+                <p class="text-xl lg:text-2xl text-gray-100 mb-8 max-w-3xl mx-auto">
+                    深入了解学术论文发布的各种开放获取许可证，选择最适合您研究成果的许可方式
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="#licenses" class="inline-flex items-center px-8 py-3 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-rocket mr-2"></i>
+                        开始探索
+                    </a>
+                    <a href="#guide" class="inline-flex items-center px-8 py-3 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-gray-900 transition-colors">
+                        <i class="fas fa-compass mr-2"></i>
+                        选择指南
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 概述部分 -->
+    <section id="overview" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl lg:text-4xl font-bold mb-6" style="color: var(--text-primary);">
+                    什么是开放获取许可证？
+                </h2>
+                <p class="text-lg max-w-3xl mx-auto" style="color: var(--text-secondary);">
+                    开放获取许可证是一种法律工具，允许作者在保留某些权利的同时，授权他人使用、分发和修改其学术作品。
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center p-8 rounded-xl card-hover" style="background-color: var(--bg-secondary);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style="background-color: var(--primary-color);">
+                        <i class="fas fa-unlock-alt text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">开放获取</h3>
+                    <p style="color: var(--text-secondary);">让研究成果免费向全世界开放，促进知识传播和学术交流</p>
+                </div>
+                
+                <div class="text-center p-8 rounded-xl card-hover" style="background-color: var(--bg-secondary);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style="background-color: var(--secondary-color);">
+                        <i class="fas fa-shield-alt text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">权利保护</h3>
+                    <p style="color: var(--text-secondary);">在开放的同时保护作者的知识产权和署名权</p>
+                </div>
+                
+                <div class="text-center p-8 rounded-xl card-hover" style="background-color: var(--bg-secondary);">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style="background-color: var(--accent-color);">
+                        <i class="fas fa-users text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">社区协作</h3>
+                    <p style="color: var(--text-secondary);">促进学术社区的协作和知识共享</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- 许可证类型 -->
+    <section id="licenses" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl lg:text-4xl font-bold mb-6" style="color: var(--text-primary);">
+                    arXiv 支持的许可证类型
+                </h2>
+                <p class="text-lg max-w-3xl mx-auto" style="color: var(--text-secondary);">
+                    arXiv 平台支持多种开放获取许可证，每种许可证都有其特定的使用条件和权利范围
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Creative Commons 许可证 -->
+                <div class="p-8 rounded-xl card-hover" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-lg flex items-center justify-center mr-4" style="background-color: #f59e0b;">
+                            <i class="fab fa-creative-commons text-xl text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Creative Commons (CC)</h3>
+                            <span class="cc-badge">最受欢迎</span>
+                        </div>
+                    </div>
+                    
+                    <p class="mb-6" style="color: var(--text-secondary);">
+                        Creative Commons 是最广泛使用的开放获取许可证系列，提供了灵活的权利管理选项。
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>
+                                <strong>CC BY</strong> - 署名许可证，允许任何用途，只需署名
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>
+                                <strong>CC BY-SA</strong> - 署名-相同方式共享，衍生作品需使用相同许可证
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>
+                                <strong>CC BY-NC</strong> - 署名-非商业性使用，禁止商业用途
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>
+                                <strong>CC BY-ND</strong> - 署名-禁止演绎，不允许修改原作品
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MIT 许可证 -->
+                <div class="p-8 rounded-xl card-hover" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-lg flex items-center justify-center mr-4" style="background-color: #10b981;">
+                            <i class="fas fa-code text-xl text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">MIT 许可证</h3>
+                            <span class="mit-badge">简洁宽松</span>
+                        </div>
+                    </div>
+                    
+                    <p class="mb-6" style="color: var(--text-secondary);">
+                        MIT 许可证是一种简洁、宽松的许可证，广泛用于软件和学术项目。
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>允许商业和非商业使用</div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>允许修改和分发</div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>只需保留版权声明</div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+                            <div>不提供担保，作者不承担责任</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apache 许可证 -->
+                <div class="p-8 rounded-xl card-hover" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-lg flex items-center justify-center mr-4" style="background-color: #ef4444;">
+                            <i class="fas fa-feather-alt text-xl text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Apache 2.0 许可证</h3>
+                            <span class="apache-badge">专利保护</span>
+                        </div>
+                    </div>
+                    
+                    <p class="mb-6" style="color: var(--text-secondary);">
+                        Apache 2.0 许可证提供了专利保护，适合包含专利技术的研究项目。
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>包含明确的专利授权</div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>允许商业使用和修改</div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>要求保留版权和许可证声明</div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-shield-alt text-blue-500 mt-1"></i>
+                            <div>提供专利诉讼保护条款</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BSD 许可证 -->
+                <div class="p-8 rounded-xl card-hover" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color);">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 rounded-lg flex items-center justify-center mr-4" style="background-color: #8b5cf6;">
+                            <i class="fas fa-university text-xl text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">BSD 许可证</h3>
+                            <span class="bsd-badge">学术传统</span>
+                        </div>
+                    </div>
+                    
+                    <p class="mb-6" style="color: var(--text-secondary);">
+                        BSD 许可证起源于加州大学伯克利分校，是学术界的传统选择。
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>极其宽松的使用条件</div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>允许闭源商业使用</div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <div>只需保留版权声明</div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-graduation-cap text-purple-500 mt-1"></i>
+                            <div>学术界广泛认可</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- 对比分析 -->
+    <section id="comparison" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl lg:text-4xl font-bold mb-6" style="color: var(--text-primary);">
+                    许可证对比分析
+                </h2>
+                <p class="text-lg max-w-3xl mx-auto" style="color: var(--text-secondary);">
+                    通过详细对比帮助您理解不同许可证的特点和适用场景
+                </p>
+            </div>
+
+            <div class="comparison-table">
+                <table class="w-full">
+                    <thead>
+                        <tr>
+                            <th>许可证类型</th>
+                            <th>商业使用</th>
+                            <th>修改权限</th>
+                            <th>分发要求</th>
+                            <th>专利保护</th>
+                            <th>适用场景</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background-color: var(--bg-primary);">
+                        <tr>
+                            <td class="font-semibold">
+                                <span class="cc-badge">CC BY</span>
+                            </td>
+                            <td><i class="fas fa-check check-icon"></i> 允许</td>
+                            <td><i class="fas fa-check check-icon"></i> 允许</td>
+                            <td>署名即可</td>
+                            <td><i class="fas fa-times cross-icon"></i> 无</td>
+                            <td>学术论文、教育资源</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">
+                                <span class="cc-badge">CC BY-SA</span>
+                            </td>
+                            <td><i class="fas fa-check check-icon"></i> 允许</td>
+                            <td><i class="fas fa-check check-icon"></i> 允许</td>
+                            <td>相同许可证</td>
+                            <td><i class="fas fa-times cross-icon"></i> 无</td>
+                            <td>协作研究项目</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">
+                                <span class="cc-badge">CC BY-NC</span>
+                            </td>
+                            <td><i class="fas fa-times cross-icon"></i> 禁止</td>
+                            <td><i class="fas fa-check check-icon"></i> 允许</td>
+                            <td>署名+非商业</td>
+                            <td><i class="fas fa-times cross-icon"></i> 无</td>
+                            <td>教育、非营利研究</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">
+                                <span class="mit-badge">MIT</span>
+                            </td>
+                            <td><i class="fas fa-check check-icon"></i> 允许</td>
+                            <td><i class="fas fa-check check-icon"></i> 允许</td>
+                            <td>保留版权</td>
+                            <td><i class="fas fa-times cross-icon"></i> 无</td>
+                            <td>软件、算法代码</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">
+                                <span class="apache-badge">Apache 2.0</span>
+                            </td>
+                            <td><i class="fas fa-check check-icon"></i> 允许</td>
+                            <td><i class="fas fa-check check-icon"></i> 允许</td>
+                            <td>保留声明</td>
+                            <td><i class="fas fa-check check-icon"></i> 有</td>
+                            <td>包含专利的项目</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">
+                                <span class="bsd-badge">BSD</span>
+                            </td>
+                            <td><i class="fas fa-check check-icon"></i> 允许</td>
+                            <td><i class="fas fa-check check-icon"></i> 允许</td>
+                            <td>保留版权</td>
+                            <td><i class="fas fa-times cross-icon"></i> 无</td>
+                            <td>学术软件、工具</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 使用统计 -->
+            <div class="mt-16 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="text-center p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                    <div class="text-3xl font-bold mb-2" style="color: var(--primary-color);">45%</div>
+                    <div class="text-sm font-medium">CC BY 使用率</div>
+                </div>
+                <div class="text-center p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                    <div class="text-3xl font-bold mb-2" style="color: var(--secondary-color);">25%</div>
+                    <div class="text-sm font-medium">MIT 许可证</div>
+                </div>
+                <div class="text-center p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                    <div class="text-3xl font-bold mb-2" style="color: var(--accent-color);">15%</div>
+                    <div class="text-sm font-medium">Apache 2.0</div>
+                </div>
+                <div class="text-center p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                    <div class="text-3xl font-bold mb-2" style="color: #f59e0b;">15%</div>
+                    <div class="text-sm font-medium">其他许可证</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- 选择指南 -->
+    <section id="guide" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl lg:text-4xl font-bold mb-6" style="color: var(--text-primary);">
+                    如何选择合适的许可证？
+                </h2>
+                <p class="text-lg max-w-3xl mx-auto" style="color: var(--text-secondary);">
+                    根据您的研究性质、合作需求和商业考虑，选择最适合的许可证
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div>
+                    <h3 class="text-2xl font-bold mb-8">决策流程图</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold" style="background-color: var(--primary-color);">1</div>
+                            <div>
+                                <h4 class="font-semibold mb-2">确定研究性质</h4>
+                                <p style="color: var(--text-secondary);">是纯理论研究、应用研究还是包含专利技术？</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold" style="background-color: var(--secondary-color);">2</div>
+                            <div>
+                                <h4 class="font-semibold mb-2">考虑商业化需求</h4>
+                                <p style="color: var(--text-secondary);">是否希望允许商业使用？是否有产业化计划？</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold" style="background-color: var(--accent-color);">3</div>
+                            <div>
+                                <h4 class="font-semibold mb-2">评估合作模式</h4>
+                                <p style="color: var(--text-secondary);">是否需要确保衍生作品保持开放？</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold" style="background-color: #f59e0b;">4</div>
+                            <div>
+                                <h4 class="font-semibold mb-2">选择合适许可证</h4>
+                                <p style="color: var(--text-secondary);">根据前面的分析结果选择最适合的许可证</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold mb-8">推荐场景</h3>
+                    <div class="space-y-6">
+                        <div class="p-6 rounded-xl border-l-4" style="background-color: var(--bg-secondary); border-color: var(--primary-color);">
+                            <h4 class="font-semibold mb-2 flex items-center">
+                                <i class="fas fa-graduation-cap mr-2" style="color: var(--primary-color);"></i>
+                                学术论文发表
+                            </h4>
+                            <p class="mb-3" style="color: var(--text-secondary);">推荐使用 <strong>CC BY</strong> 许可证</p>
+                            <p class="text-sm" style="color: var(--text-secondary);">最大化学术影响力，允许广泛传播和引用</p>
+                        </div>
+                        
+                        <div class="p-6 rounded-xl border-l-4" style="background-color: var(--bg-secondary); border-color: var(--secondary-color);">
+                            <h4 class="font-semibold mb-2 flex items-center">
+                                <i class="fas fa-code mr-2" style="color: var(--secondary-color);"></i>
+                                开源软件项目
+                            </h4>
+                            <p class="mb-3" style="color: var(--text-secondary);">推荐使用 <strong>MIT</strong> 或 <strong>Apache 2.0</strong></p>
+                            <p class="text-sm" style="color: var(--text-secondary);">促进社区贡献，Apache 2.0 提供专利保护</p>
+                        </div>
+                        
+                        <div class="p-6 rounded-xl border-l-4" style="background-color: var(--bg-secondary); border-color: var(--accent-color);">
+                            <h4 class="font-semibold mb-2 flex items-center">
+                                <i class="fas fa-users mr-2" style="color: var(--accent-color);"></i>
+                                协作研究项目
+                            </h4>
+                            <p class="mb-3" style="color: var(--text-secondary);">推荐使用 <strong>CC BY-SA</strong></p>
+                            <p class="text-sm" style="color: var(--text-secondary);">确保衍生作品保持开放，促进知识共享</p>
+                        </div>
+                        
+                        <div class="p-6 rounded-xl border-l-4" style="background-color: var(--bg-secondary); border-color: #f59e0b;">
+                            <h4 class="font-semibold mb-2 flex items-center">
+                                <i class="fas fa-shield-alt mr-2" style="color: #f59e0b;"></i>
+                                教育资源
+                            </h4>
+                            <p class="mb-3" style="color: var(--text-secondary);">推荐使用 <strong>CC BY-NC</strong></p>
+                            <p class="text-sm" style="color: var(--text-secondary);">允许教育使用，防止商业滥用</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 常见问题 -->
+            <div class="mt-20">
+                <h3 class="text-2xl font-bold mb-8 text-center">常见问题解答</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <h4 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-question-circle mr-2" style="color: var(--primary-color);"></i>
+                            可以更改许可证吗？
+                        </h4>
+                        <p style="color: var(--text-secondary);">
+                            作为版权所有者，您可以为新版本选择不同的许可证，但已发布版本的许可证通常不可撤销。
+                        </p>
+                    </div>
+                    
+                    <div class="p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <h4 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-question-circle mr-2" style="color: var(--secondary-color);"></i>
+                            多个作者如何选择？
+                        </h4>
+                        <p style="color: var(--text-secondary);">
+                            所有作者需要就许可证选择达成一致，建议在项目开始时就确定许可证策略。
+                        </p>
+                    </div>
+                    
+                    <div class="p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <h4 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-question-circle mr-2" style="color: var(--accent-color);"></i>
+                            许可证影响引用吗？
+                        </h4>
+                        <p style="color: var(--text-secondary);">
+                            开放许可证通常会增加引用率，因为更容易获取和使用研究成果。
+                        </p>
+                    </div>
+                    
+                    <div class="p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <h4 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-question-circle mr-2" style="color: #f59e0b;"></i>
+                            如何处理专利问题？
+                        </h4>
+                        <p style="color: var(--text-secondary);">
+                            如果研究涉及专利技术，建议选择 Apache 2.0 等包含专利授权条款的许可证。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部作者信息 -->
+    <footer class="py-16" style="background-color: var(--bg-secondary);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
+                    <i class="fas fa-user-graduate text-2xl text-white"></i>
+                </div>
+                
+                <h3 class="text-2xl font-bold mb-2">Dr. 学术助手</h3>
+                <p class="mb-6" style="color: var(--text-secondary);">
+                    专注于开放科学和学术出版的研究者，致力于推广开放获取和知识共享
+                </p>
+                
+                <div class="flex justify-center space-x-6 mb-8">
+                    <a href="https://github.com/academic-helper" class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-colors">
+                        <i class="fab fa-github text-xl"></i>
+                        <span>GitHub</span>
+                    </a>
+                    <a href="https://twitter.com/academic_helper" class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-colors">
+                        <i class="fab fa-twitter text-xl"></i>
+                        <span>Twitter</span>
+                    </a>
+                    <a href="https://linkedin.com/in/academic-helper" class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-colors">
+                        <i class="fab fa-linkedin text-xl"></i>
+                        <span>LinkedIn</span>
+                    </a>
+                    <a href="https://orcid.org/0000-0000-0000-0000" class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-colors">
+                        <i class="fab fa-orcid text-xl"></i>
+                        <span>ORCID</span>
+                    </a>
+                </div>
+                
+                <div class="text-sm" style="color: var(--text-secondary);">
+                    <p>&copy; 2024 Dr. 学术助手. 本页面采用 CC BY 4.0 许可证发布.</p>
+                    <p class="mt-2">基于 arXiv 官方许可证信息整理，最后更新：2024年1月</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 主题切换功能
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // 检查系统主题偏好
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const currentTheme = localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light');
+        
+        // 设置初始主题
+        html.setAttribute('data-theme', currentTheme);
+        updateThemeIcon(currentTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            icon.className = theme === 'dark' ? 'fas fa-sun text-lg' : 'fas fa-moon text-lg';
+        }
+        
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // 导航栏活跃状态
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('section[id]');
+        
+        function updateActiveNav() {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (window.pageYOffset >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', updateActiveNav);
+        
+        // 淡入动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationDelay = '0.1s';
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+        
+        // 观察所有需要动画的元素
+        document.querySelectorAll('.card-hover, .comparison-table, h2, h3').forEach(el => {
+            observer.observe(el);
+        });
+        
+        // 移动端菜单切换
+        const mobileMenuButton = document.querySelector('.md\\:hidden button');
+        const mobileMenu = document.createElement('div');
+        mobileMenu.className = 'md:hidden absolute top-16 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg rounded-b-lg p-4 space-y-2';
+        mobileMenu.style.display = 'none';
+        
+        navLinks.forEach(link => {
+            const mobileLink = link.cloneNode(true);
+            mobileLink.className = 'block px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700';
+            mobileMenu.appendChild(mobileLink);
+        });
+        
+        document.querySelector('nav > div').appendChild(mobileMenu);
+        
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.style.display = mobileMenu.style.display === 'none' ? 'block' : 'none';
+        });
+        
+        // 点击外部关闭移动菜单
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('nav')) {
+                mobileMenu.style.display = 'none';
+            }
+        });
+        
+        // 性能优化：防抖滚动事件
+        let scrollTimeout;
+        window.addEventListener('scroll', () => {
+            if (scrollTimeout) {
+                clearTimeout(scrollTimeout);
+            }
+            scrollTimeout = setTimeout(updateActiveNav, 10);
+        });
+        
+        // 预加载关键资源
+        const preloadLinks = [
+            'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+        ];
+        
+        preloadLinks.forEach(href => {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'style';
+            link.href = href;
+            document.head.appendChild(link);
+        });
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化导航状态
+            updateActiveNav();
+            
+            // 添加页面加载动画
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

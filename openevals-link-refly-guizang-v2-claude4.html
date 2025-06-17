@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用 OpenEvals 评估大语言模型 | LLM 评估指南</title>
+    <meta name="description" content="深入了解如何使用 OpenEvals 框架有效评估大语言模型的性能，包含实用指南和最佳实践。">
+    
+    <!-- 110 Case：使用 OpenEvals 评估大语言模型（链接 + Refly解析链接 + 归藏 V2 + Claude Sonnet 4）-->
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+
+        [data-theme="dark"] {
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --border-color: #374151;
+        }
+
+        * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+
+        .code-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .metric-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .chart-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 2px;
+            background: var(--primary-color);
+            border-radius: 1px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-brain text-2xl gradient-text"></i>
+                    <span class="text-xl font-bold">LLM 评估指南</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="#overview" class="nav-link">概述</a>
+                    <a href="#methodology" class="nav-link">方法论</a>
+                    <a href="#implementation" class="nav-link">实现</a>
+                    <a href="#results" class="nav-link">结果</a>
+                    <button id="themeToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative py-20 bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center fade-in">
+                <h1 class="text-5xl md:text-6xl font-bold mb-6">
+                    使用 <span class="gradient-text">OpenEvals</span><br>
+                    评估大语言模型
+                </h1>
+                <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+                    深入探索如何使用 OpenEvals 框架系统性地评估大语言模型性能，提升 AI 应用的可靠性和准确性
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button class="btn-primary text-white px-8 py-4 rounded-xl font-semibold">
+                        <i class="fas fa-rocket mr-2"></i>
+                        开始评估
+                    </button>
+                    <button class="border-2 border-gray-300 dark:border-gray-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <i class="fab fa-github mr-2"></i>
+                        查看代码
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Metrics -->
+    <section class="py-16 bg-white dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="metric-card card-hover fade-in">
+                    <i class="fas fa-chart-line text-3xl text-indigo-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold mb-2">95%</h3>
+                    <p class="text-gray-600 dark:text-gray-400">评估准确率</p>
+                </div>
+                <div class="metric-card card-hover fade-in" style="animation-delay: 0.1s">
+                    <i class="fas fa-clock text-3xl text-purple-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold mb-2">50%</h3>
+                    <p class="text-gray-600 dark:text-gray-400">时间节省</p>
+                </div>
+                <div class="metric-card card-hover fade-in" style="animation-delay: 0.2s">
+                    <i class="fas fa-cogs text-3xl text-cyan-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold mb-2">100+</h3>
+                    <p class="text-gray-600 dark:text-gray-400">评估指标</p>
+                </div>
+                <div class="metric-card card-hover fade-in" style="animation-delay: 0.3s">
+                    <i class="fas fa-users text-3xl text-green-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold mb-2">1000+</h3>
+                    <p class="text-gray-600 dark:text-gray-400">开发者使用</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        
+        <!-- Overview Section -->
+        <section id="overview" class="mb-16 fade-in">
+            <h2 class="text-3xl font-bold mb-8 flex items-center">
+                <i class="fas fa-eye text-indigo-600 mr-4"></i>
+                OpenEvals 概述
+            </h2>
+            <div class="prose prose-lg max-w-none">
+                <p class="text-lg text-gray-700 dark:text-gray-300 mb-6">
+                    OpenEvals 是一个开源的大语言模型评估框架，由 OpenAI 开发并维护。它提供了一套标准化的评估方法，
+                    帮助开发者和研究人员系统性地测试和比较不同模型的性能。
+                </p>
+                
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 p-6 rounded-xl mb-8">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-3"></i>
+                        核心优势
+                    </h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                            <span><strong>标准化评估：</strong>提供一致的评估标准和方法论</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                            <span><strong>多维度测试：</strong>涵盖推理、知识、安全性等多个维度</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                            <span><strong>易于集成：</strong>简单的 API 接口，快速集成到现有工作流</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                            <span><strong>开源透明：</strong>完全开源，社区驱动的持续改进</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Methodology Section -->
+        <section id="methodology" class="mb-16 fade-in">
+            <h2 class="text-3xl font-bold mb-8 flex items-center">
+                <i class="fas fa-microscope text-purple-600 mr-4"></i>
+                评估方法论
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 card-hover">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-brain text-indigo-600 mr-3"></i>
+                        认知能力评估
+                    </h3>
+                    <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                        <li>• 逻辑推理能力</li>
+                        <li>• 数学计算能力</li>
+                        <li>• 常识理解能力</li>
+                        <li>• 创造性思维</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 card-hover">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-shield-alt text-green-600 mr-3"></i>
+                        安全性评估
+                    </h3>
+                    <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                        <li>• 有害内容检测</li>
+                        <li>• 偏见识别</li>
+                        <li>• 隐私保护</li>
+                        <li>• 对抗性攻击防护</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 card-hover">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-language text-cyan-600 mr-3"></i>
+                        语言能力评估
+                    </h3>
+                    <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                        <li>• 多语言理解</li>
+                        <li>• 语法准确性</li>
+                        <li>• 语义理解</li>
+                        <li>• 文本生成质量</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 card-hover">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-tasks text-orange-600 mr-3"></i>
+                        任务执行评估
+                    </h3>
+                    <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                        <li>• 指令遵循能力</li>
+                        <li>• 多步骤任务处理</li>
+                        <li>• 上下文理解</li>
+                        <li>• 结果准确性</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Implementation Section -->
+        <section id="implementation" class="mb-16 fade-in">
+            <h2 class="text-3xl font-bold mb-8 flex items-center">
+                <i class="fas fa-code text-green-600 mr-4"></i>
+                实现指南
+            </h2>
+            
+            <div class="mb-8">
+                <h3 class="text-2xl font-semibold mb-4">快速开始</h3>
+                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                    使用 OpenEvals 评估您的模型只需几个简单步骤：
+                </p>
+                
+                <div class="code-block mb-6">
+<pre><code># 安装 OpenEvals
+pip install openai-evals
+
+# 克隆评估仓库
+git clone https://github.com/openai/evals.git
+cd evals
+
+# 运行基础评估
+oaieval gpt-3.5-turbo test-match
+
+# 运行自定义评估
+oaieval gpt-4 my-custom-eval</code></pre>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="text-2xl font-semibold mb-4">配置评估参数</h3>
+                <div class="code-block mb-6">
+<pre><code># 创建评估配置文件 eval_config.yaml
+eval_name: "custom-reasoning-eval"
+eval_description: "测试模型的推理能力"
+
+dataset:
+  path: "data/reasoning_questions.jsonl"
+  format: "jsonl"
+
+model_specs:
+  - model: "gpt-4"
+    temperature: 0.0
+    max_tokens: 500
+  - model: "gpt-3.5-turbo"
+    temperature: 0.0
+    max_tokens: 500
+
+metrics:
+  - accuracy
+  - f1_score
+  - response_time</code></pre>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-6 rounded-r-xl mb-8">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 mr-3 mt-1"></i>
+                    <div>
+                        <h4 class="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">最佳实践建议</h4>
+                        <ul class="text-yellow-700 dark:text-yellow-300 space-y-1">
+                            <li>• 使用多个评估指标进行综合评估</li>
+                            <li>• 定期更新评估数据集以反映最新需求</li>
+                            <li>• 在不同温度设置下测试模型表现</li>
+                            <li>• 记录和分析失败案例以改进模型</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results" class="mb-16 fade-in">
+            <h2 class="text-3xl font-bold mb-8 flex items-center">
+                <i class="fas fa-chart-bar text-cyan-600 mr-4"></i>
+                评估结果分析
+            </h2>
+            
+            <div class="chart-container mb-8">
+                <h3 class="text-xl font-semibold mb-6">模型性能对比</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="relative w-32 h-32 mx-auto mb-4">
+                            <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none" stroke="#e5e7eb" stroke-width="2"/>
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none" stroke="#6366f1" stroke-width="2"
+                                      stroke-dasharray="85, 100"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-2xl font-bold">85%</span>
+                            </div>
+                        </div>
+                        <h4 class="font-semibold">GPT-4</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">推理准确率</p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="relative w-32 h-32 mx-auto mb-4">
+                            <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none" stroke="#e5e7eb" stroke-width="2"/>
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none" stroke="#8b5cf6" stroke-width="2"
+                                      stroke-dasharray="72, 100"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-2xl font-bold">72%</span>
+                            </div>
+                        </div>
+                        <h4 class="font-semibold">GPT-3.5</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">推理准确率</p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="relative w-32 h-32 mx-auto mb-4">
+                            <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none" stroke="#e5e7eb" stroke-width="2"/>
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none" stroke="#06b6d4" stroke-width="2"
+                                      stroke-dasharray="68, 100"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-2xl font-bold">68%</span>
+                            </div>
+                        </div>
+                        <h4 class="font-semibold">Claude-2</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">推理准确率</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <h4 class="text-lg font-semibold mb-4">关键发现</h4>
+                    <ul class="space-y-3 text-gray-600 dark:text-gray-400">
+                        <li class="flex items-start">
+                            <i class="fas fa-arrow-up text-green-500 mr-3 mt-1"></i>
+                            <span>GPT-4 在复杂推理任务中表现最佳</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-balance-scale text-blue-500 mr-3 mt-1"></i>
+                            <span>GPT-3.5 在成本效益方面具有优势</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-shield-alt text-purple-500 mr-3 mt-1"></i>
+                            <span>所有模型在安全性评估中表现良好</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <h4 class="text-lg font-semibold mb-4">改进建议</h4>
+                    <ul class="space-y-3 text-gray-600 dark:text-gray-400">
+                        <li class="flex items-start">
+                            <i class="fas fa-lightbulb text-yellow-500 mr-3 mt-1"></i>
+                            <span>增加领域特定的评估数据集</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-cogs text-gray-500 mr-3 mt-1"></i>
+                            <span>优化提示工程以提升性能</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-users text-indigo-500 mr-3 mt-1"></i>
+                            <span>引入人工评估作为补充验证</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section class="mb-16 fade-in">
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-8 rounded-2xl">
+                <h2 class="text-2xl font-bold mb-4">总结与展望</h2>
+                <p class="text-lg mb-6 opacity-90">
+                    OpenEvals 为大语言模型评估提供了强大而灵活的框架。通过标准化的评估流程，
+                    我们能够更好地理解模型的能力边界，为实际应用提供可靠的性能指标。
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button class="bg-white text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-download mr-2"></i>
+                        下载完整报告
+                    </button>
+                    <button class="border-2 border-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition-colors">
+                        <i class="fas fa-share mr-2"></i>
+                        分享文章
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Author Section -->
+    <footer class="bg-gray-50 dark:bg-gray-900 py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <div class="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center">
+                    <i class="fas fa-user text-white text-2xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">张伟博士</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">
+                    AI 研究员 & 机器学习专家<br>
+                    专注于大语言模型评估与优化
+                </p>
+                
+                <div class="flex justify-center space-x-6 mb-8">
+                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                        <i class="fab fa-github text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
+                        <i class="fab fa-twitter text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-500 transition-colors">
+                        <i class="fab fa-linkedin text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                        <i class="fas fa-envelope text-2xl"></i>
+                    </a>
+                </div>
+                
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-8">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        © 2024 张伟博士. 保留所有权利. | 
+                        <a href="#" class="hover:text-indigo-600 dark:hover:text-indigo-400">隐私政策</a> | 
+                        <a href="#" class="hover:text-indigo-600 dark:hover:text-indigo-400">使用条款</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // Check for saved theme preference or default to system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        const currentTheme = savedTheme || systemTheme;
+        
+        html.setAttribute('data-theme', currentTheme);
+        if (currentTheme === 'dark') {
+            html.classList.add('dark');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            const isDark = html.classList.contains('dark');
+            
+            if (isDark) {
+                html.classList.remove('dark');
+                html.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // Progress Bar
+        const progressBar = document.getElementById('progressBar');
+        
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.body.offsetHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            progressBar.style.width = scrollPercent + '%';
+        });
+
+        // Smooth Scroll for Navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Active Navigation Link
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (window.pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Fade in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Add loading animation
+        window.addEventListener('load', () => {
+            document.body.style.opacity = '1';
+        });
+    </script>
+</body>
+</html>

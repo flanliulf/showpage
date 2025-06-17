@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用 OpenEvals 评估大语言模型 | LLM 评估的工程化之路</title>
+
+    <!-- 110 网页生成 Case：使用 OpenEvals 评估大语言模型（链接+ SumBuddy 分析总结  + Refly + 归藏 V3 + Claude Sonnet 4） -->
+    
+    <!-- External CSS -->
+    <link href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-100-M/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --border-color: #e2e8f0;
+            --shadow-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-heavy: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        [data-theme="dark"] {
+            --text-primary: #f7fafc;
+            --text-secondary: #cbd5e0;
+            --bg-primary: #1a202c;
+            --bg-secondary: #2d3748;
+            --border-color: #4a5568;
+        }
+
+        * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Noto Sans SC', Tahoma, Arial, Roboto, "Droid Sans", "Helvetica Neue", "Droid Sans Fallback", "Heiti SC", "Hiragino Sans GB", Simsun, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        .serif-font {
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .hero-bg {
+            background: var(--primary-gradient);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .floating-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .gradient-text {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+            margin: 4rem 0;
+        }
+
+        .quote-mark {
+            font-size: 4rem;
+            line-height: 1;
+            opacity: 0.3;
+        }
+
+        .drop-cap {
+            float: left;
+            font-size: 4rem;
+            line-height: 3rem;
+            margin: 0.2rem 0.5rem 0 0;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 1.5rem;
+            width: 2px;
+            height: calc(100% - 1rem);
+            background: var(--border-color);
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .scroll-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--bg-secondary);
+            z-index: 1000;
+        }
+
+        .scroll-progress {
+            height: 100%;
+            background: var(--primary-gradient);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 0.5rem;
+            cursor: pointer;
+            position: relative;
+            width: 60px;
+            height: 32px;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            transition: transform 0.3s ease;
+        }
+
+        [data-theme="dark"] .theme-toggle::before {
+            transform: translateX(28px);
+        }
+
+        .mermaid {
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .drop-cap {
+                font-size: 3rem;
+                line-height: 2.5rem;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem !important;
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-left: 4px solid #667eea;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .tech-icon {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body>
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-indicator">
+        <div class="scroll-progress" id="scrollProgress"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-white bg-opacity-90 backdrop-blur-md z-50 border-b border-gray-200" style="background-color: var(--bg-primary); border-color: var(--border-color);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-brain text-2xl tech-icon"></i>
+                    <span class="font-bold text-xl">LLM Evals</span>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="#overview" class="hover:text-blue-600 transition-colors">概述</a>
+                    <a href="#analysis" class="hover:text-blue-600 transition-colors">分析</a>
+                    <a href="#visualization" class="hover:text-blue-600 transition-colors">可视化</a>
+                    <a href="#reading" class="hover:text-blue-600 transition-colors">延伸阅读</a>
+                    <div class="theme-toggle" id="themeToggle"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-bg min-h-screen flex items-center justify-center text-white relative">
+        <div class="max-w-6xl mx-auto px-4 text-center z-10">
+            <div class="floating-animation">
+                <i class="fas fa-chart-line text-6xl mb-8 opacity-80"></i>
+            </div>
+            <h1 class="hero-title text-5xl md:text-7xl font-bold mb-6 serif-font">
+                使用 OpenEvals<br>
+                <span class="text-4xl md:text-5xl font-normal">评估大语言模型</span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 opacity-90 max-w-3xl mx-auto leading-relaxed">
+                从"手感驱动"到"数据驱动"的工程化转变<br>
+                探索 LLM 应用评估的标准化之路
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-6 py-3 flex items-center space-x-2">
+                    <i class="fab fa-github"></i>
+                    <span>LangChain OpenEvals</span>
+                </div>
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-6 py-3 flex items-center space-x-2">
+                    <i class="fas fa-tools"></i>
+                    <span>AgentEvals</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <i class="fas fa-chevron-down text-2xl opacity-70"></i>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-16">
+        
+        <!-- Overview Section -->
+        <section id="overview" class="fade-in mb-20">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4 gradient-text serif-font">核心洞察</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto" style="color: var(--text-secondary);">
+                    深入探讨 LLM 应用评估的复杂性与解决方案
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-16">
+                <div class="card-hover bg-white rounded-2xl p-8 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <div class="text-center">
+                        <div class="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                            <i class="fas fa-database text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">数据驱动</h3>
+                        <p class="text-gray-600" style="color: var(--text-secondary);">
+                            从主观判断转向客观、可量化的评估体系，建立系统化的质量标准。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card-hover bg-white rounded-2xl p-8 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <div class="text-center">
+                        <div class="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center">
+                            <i class="fas fa-cogs text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">工程化</h3>
+                        <p class="text-gray-600" style="color: var(--text-secondary);">
+                            将评估过程标准化、自动化，形成可重复的工程实践。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card-hover bg-white rounded-2xl p-8 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <div class="text-center">
+                        <div class="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r from-pink-500 to-red-600 flex items-center justify-center">
+                            <i class="fas fa-route text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-4">过程评估</h3>
+                        <p class="text-gray-600" style="color: var(--text-secondary);">
+                            不仅关注最终结果，更要评估 Agent 的决策路径和推理过程。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Analysis Section -->
+        <section id="analysis" class="fade-in mb-20">
+            <h2 class="text-4xl font-bold mb-12 text-center gradient-text serif-font">深度分析</h2>
+            
+            <!-- Core Components -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-bold mb-8 flex items-center">
+                    <i class="fas fa-puzzle-piece mr-3 text-blue-600"></i>
+                    评估的核心要素
+                </h3>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="highlight-box p-6 rounded-lg">
+                        <h4 class="text-xl font-bold mb-4 flex items-center">
+                            <i class="fas fa-database mr-2 text-blue-500"></i>
+                            数据 (Data)
+                        </h4>
+                        <p class="mb-4" style="color: var(--text-secondary);">
+                            高质量、特定场景的数据集是评估真实性的基础。需要精心构建能够反映实际应用场景的测试用例。
+                        </p>
+                        <ul class="space-y-2 text-sm" style="color: var(--text-secondary);">
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>代表性样本</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>边缘案例</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>场景覆盖</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="highlight-box p-6 rounded-lg">
+                        <h4 class="text-xl font-bold mb-4 flex items-center">
+                            <i class="fas fa-ruler mr-2 text-purple-500"></i>
+                            指标 (Metric)
+                        </h4>
+                        <p class="mb-4" style="color: var(--text-secondary);">
+                            明确的评估标准和量化方法，确保评估结果的一致性和可比较性。
+                        </p>
+                        <ul class="space-y-2 text-sm" style="color: var(--text-secondary);">
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>量化标准</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>一致性保证</li>
+                            <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>可解释性</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Three Core Evaluation Types -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-bold mb-8 flex items-center">
+                    <i class="fas fa-layer-group mr-3 text-purple-600"></i>
+                    三种核心评估技术
+                </h3>
+                
+                <div class="space-y-8">
+                    <div class="timeline-item">
+                        <div class="bg-white rounded-xl p-8 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                            <h4 class="text-xl font-bold mb-4 flex items-center">
+                                <i class="fas fa-gavel mr-3 text-blue-600"></i>
+                                LLM-as-a-Judge
+                            </h4>
+                            <p class="mb-4" style="color: var(--text-secondary);">
+                                <span class="drop-cap serif-font">利</span>用大语言模型本身的能力来评估其他 LLM 的输出质量。这种"用魔法打败魔法"的方法特别适用于评估自然语言输出的主观性指标。
+                            </p>
+                            <div class="bg-gray-50 rounded-lg p-4 mt-4" style="background-color: var(--bg-primary);">
+                                <p class="text-sm font-medium mb-2">适用场景：</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">对话质量评估</span>
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">内容相关性</span>
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">风格一致性</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="bg-white rounded-xl p-8 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                            <h4 class="text-xl font-bold mb-4 flex items-center">
+                                <i class="fas fa-table mr-3 text-green-600"></i>
+                                结构化数据评估
+                            </h4>
+                            <p class="mb-4" style="color: var(--text-secondary);">
+                                <span class="drop-cap serif-font">针</span>对具有明确格式要求的输出进行评估，如 JSON 格式、API 调用参数等。通过解析和验证结构化数据的完整性和正确性。
+                            </p>
+                            <div class="bg-gray-50 rounded-lg p-4 mt-4" style="background-color: var(--bg-primary);">
+                                <p class="text-sm font-medium mb-2">适用场景：</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs">JSON 格式验证</span>
+                                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs">API 参数检查</span>
+                                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs">数据完整性</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="bg-white rounded-xl p-8 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                            <h4 class="text-xl font-bold mb-4 flex items-center">
+                                <i class="fas fa-route mr-3 text-purple-600"></i>
+                                Agent 轨迹评估
+                            </h4>
+                            <p class="mb-4" style="color: var(--text-secondary);">
+                                <span class="drop-cap serif-font">超</span>越对最终结果的关注，深入评估 Agent 完成任务的整个决策过程。这种方法对于提升 Agent 的可靠性和可解释性至关重要。
+                            </p>
+                            <div class="bg-gray-50 rounded-lg p-4 mt-4" style="background-color: var(--bg-primary);">
+                                <p class="text-sm font-medium mb-2">评估维度：</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs">决策路径</span>
+                                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs">工具使用</span>
+                                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs">推理过程</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Quotes -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-bold mb-8 flex items-center">
+                    <i class="fas fa-quote-left mr-3 text-indigo-600"></i>
+                    重要观点
+                </h3>
+                
+                <div class="space-y-8">
+                    <blockquote class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-6 rounded-r-lg" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));">
+                        <div class="quote-mark text-blue-300 serif-font">"</div>
+                        <p class="text-lg italic mb-4 serif-font">
+                            评估（Evals）提供了一种系统化的方法，用以根据对您的应用至关重要的标准来评判大语言模型（LLM）的输出质量。
+                        </p>
+                        <footer class="text-sm font-medium" style="color: var(--text-secondary);">
+                            — 定义了评估在 LLM 应用开发中的核心价值
+                        </footer>
+                    </blockquote>
+                    
+                    <blockquote class="bg-gradient-to-r from-green-50 to-teal-50 border-l-4 border-green-500 p-6 rounded-r-lg" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(20, 184, 166, 0.05));">
+                        <div class="quote-mark text-green-300 serif-font">"</div>
+                        <p class="text-lg italic mb-4 serif-font">
+                            在构建一个Agent时，您所关心的通常不仅仅是最终的输出——您还想了解该Agent是如何达成那个结果的。
+                        </p>
+                        <footer class="text-sm font-medium" style="color: var(--text-secondary);">
+                            — 强调了过程透明度和决策路径的重要性
+                        </footer>
+                    </blockquote>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visualization Section -->
+        <section id="visualization" class="fade-in mb-20">
+            <h2 class="text-4xl font-bold mb-12 text-center gradient-text serif-font">概念可视化</h2>
+            
+            <div class="bg-white rounded-2xl p-8 shadow-lg border mb-8" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                <h3 class="text-xl font-bold mb-6 text-center">LLM 评估生态系统</h3>
+                <div class="mermaid" id="evalEcosystem">
+                    graph TB
+                        A[LLM 应用开发] --> B[评估需求]
+                        B --> C[OpenEvals 工具包]
+                        B --> D[AgentEvals 工具包]
+                        
+                        C --> E[LLM-as-a-Judge]
+                        C --> F[结构化数据评估]
+                        D --> G[轨迹评估]
+                        
+                        E --> H[自然语言输出评估]
+                        F --> I[格式验证]
+                        G --> J[决策过程分析]
+                        
+                        H --> K[LangSmith 平台]
+                        I --> K
+                        J --> K
+                        
+                        K --> L[持续监控]
+                        K --> M[团队协作]
+                        K --> N[实验管理]
+                        
+                        L --> O[生产优化]
+                        M --> O
+                        N --> O
+                        
+                        style A fill:#667eea,stroke:#333,stroke-width:2px,color:#fff
+                        style K fill:#764ba2,stroke:#333,stroke-width:2px,color:#fff
+                        style O fill:#f093fb,stroke:#333,stroke-width:2px,color:#fff
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-6 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <h3 class="text-lg font-bold mb-4 text-center">评估技术对比</h3>
+                    <div class="mermaid" id="evalComparison">
+                        pie title 评估技术使用场景分布
+                            "LLM-as-a-Judge" : 45
+                            "结构化数据评估" : 25
+                            "轨迹评估" : 30
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-6 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <h3 class="text-lg font-bold mb-4 text-center">发展时间线</h3>
+                    <div class="mermaid" id="timeline">
+                        timeline
+                            title LLM 评估发展历程
+                            
+                            传统阶段 : 手工测试
+                                     : 主观判断
+                                     : 个案分析
+                            
+                            过渡阶段 : 半自动化
+                                     : 简单指标
+                                     : 批量测试
+                            
+                            现代阶段 : OpenEvals
+                                     : 标准化流程
+                                     : 工程化实践
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Innovation Insights -->
+        <section class="fade-in mb-20">
+            <h2 class="text-4xl font-bold mb-12 text-center gradient-text serif-font">创新洞察</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="card-hover bg-white rounded-2xl p-8 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-lightbulb text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-3">从"结果评估"到"过程评估"</h3>
+                            <p style="color: var(--text-secondary);">
+                                引入"轨迹评估"是重要的思想进步，表明对高级AI系统的评估不能只看最终答案，更要关注决策路径的合理性。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-hover bg-white rounded-2xl p-8 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-code text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-3">评估的"代码化"与"标准化"</h3>
+                            <p style="color: var(--text-secondary);">
+                                OpenEvals将常见评估模式封装成可复用代码库，推动LLM评估领域的"基础设施即代码"。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-hover bg-white rounded-2xl p-8 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-red-600 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-users text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-3">人机协同的评估范式</h3>
+                            <p style="color: var(--text-secondary);">
+                                通过定制提示词和few-shot示例，实现机器效率与人类智慧的结合。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-hover bg-white rounded-2xl p-8 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-infinity text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-3">生态闭环的战略价值</h3>
+                            <p style="color: var(--text-secondary);">
+                                将开源评估工具与商业平台深度整合，构建强大的LLM应用开发生态系统。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Action Items -->
+        <section class="fade-in mb-20">
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
+                <h2 class="text-3xl font-bold mb-6 text-center">行动建议</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 flex items-center">
+                            <i class="fas fa-rocket mr-3"></i>
+                            立即行动
+                        </h3>
+                        <p class="mb-4 opacity-90">
+                            对于正在开发LLM应用的开发者，可以立即采取的行动：
+                        </p>
+                        <ul class="space-y-2 opacity-90">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle mr-2 mt-1 text-green-300"></i>
+                                挑选5-10个代表性的边缘用户问题作为初始评估数据集
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle mr-2 mt-1 text-green-300"></i>
+                                使用OpenEvals的LLM-as-a-judge评估器
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle mr-2 mt-1 text-green-300"></i>
+                                定义"答案相关性"和"幻觉检测"两个基础标准
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 flex items-center">
+                            <i class="fas fa-brain mr-3"></i>
+                            认知升级
+                        </h3>
+                        <p class="opacity-90">
+                            将LLM应用评估从开发后期的"锦上添花"转变为贯穿整个开发生命周期的核心工程实践。建立系统化、可重复、可量化的评估体系，使"调优"不再是玄学，而是有明确目标和反馈的迭代过程。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Further Reading -->
+        <section id="reading" class="fade-in mb-20">
+            <h2 class="text-4xl font-bold mb-12 text-center gradient-text serif-font">延伸阅读</h2>
+            
+            <div class="bg-white rounded-2xl p-8 shadow-lg border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                <p class="text-lg mb-8 text-center" style="color: var(--text-secondary);">
+                    深入了解 LLM 评估与 AI 工程化的推荐资源
+                </p>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="card-hover bg-white rounded-xl p-6 border" style="background-color: var(--bg-primary); border-color: var(--border-color);">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-book text-blue-600 text-xl mt-1"></i>
+                            <div>
+                                <h4 class="font-bold mb-2">《Evaluating Language Models》</h4>
+                                <p class="text-sm mb-2" style="color: var(--text-secondary);">
+                                    OpenAI 关于语言模型评估的综合指南，涵盖了从基础概念到高级技术的完整框架。
+                                </p>
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">核心理论</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-hover bg-white rounded-xl p-6 border" style="background-color: var(--bg-primary); border-color: var(--border-color);">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-file-alt text-green-600 text-xl mt-1"></i>
+                            <div>
+                                <h4 class="font-bold mb-2">《LangChain 官方文档》</h4>
+                                <p class="text-sm mb-2" style="color: var(--text-secondary);">
+                                    OpenEvals 和 AgentEvals 的详细使用指南，包含丰富的代码示例和最佳实践。
+                                </p>
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">实践指南</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-hover bg-white rounded-xl p-6 border" style="background-color: var(--bg-primary); border-color: var(--border-color);">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-graduation-cap text-purple-600 text-xl mt-1"></i>
+                            <div>
+                                <h4 class="font-bold mb-2">《AI Engineering》</h4>
+                                <p class="text-sm mb-2" style="color: var(--text-secondary);">
+                                    Chip Huyen 的 AI 工程化经典著作，深入探讨了机器学习系统的生产化部署。
+                                </p>
+                                <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">工程化</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-hover bg-white rounded-xl p-6 border" style="background-color: var(--bg-primary); border-color: var(--border-color);">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-chart-line text-orange-600 text-xl mt-1"></i>
+                            <div>
+                                <h4 class="font-bold mb-2">《Measuring LLM Performance》</h4>
+                                <p class="text-sm mb-2" style="color: var(--text-secondary);">
+                                    Anthropic 研究团队关于大语言模型性能测量的深度研究报告。
+                                </p>
+                                <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">研究报告</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-hover bg-white rounded-xl p-6 border" style="background-color: var(--bg-primary); border-color: var(--border-color);">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-cogs text-teal-600 text-xl mt-1"></i>
+                            <div>
+                                <h4 class="font-bold mb-2">《MLOps 实践指南》</h4>
+                                <p class="text-sm mb-2" style="color: var(--text-secondary);">
+                                    机器学习运维的完整指南，包含模型监控、评估和持续集成的最佳实践。
+                                </p>
+                                <span class="text-xs bg-teal-100 text-teal-800 px-2 py-1 rounded">运维实践</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-hover bg-white rounded-xl p-6 border" style="background-color: var(--bg-primary); border-color: var(--border-color);">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-robot text-red-600 text-xl mt-1"></i>
+                            <div>
+                                <h4 class="font-bold mb-2">《Agent 系统设计》</h4>
+                                <p class="text-sm mb-2" style="color: var(--text-secondary);">
+                                    关于智能 Agent 系统架构设计和评估方法的前沿研究综述。
+                                </p>
+                                <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">前沿研究</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Terms -->
+        <section class="fade-in mb-20">
+            <h2 class="text-4xl font-bold mb-12 text-center gradient-text serif-font">关键术语</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl p-6 border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <h3 class="text-lg font-bold mb-3 flex items-center">
+                        <i class="fas fa-tag mr-2 text-blue-600"></i>
+                        Evals (评估)
+                    </h3>
+                    <p class="text-sm" style="color: var(--text-secondary);">
+                        指一套系统化的流程和方法，用于根据预设标准和特定数据集来衡量和判断大语言模型应用的输出质量。
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <h3 class="text-lg font-bold mb-3 flex items-center">
+                        <i class="fas fa-gavel mr-2 text-green-600"></i>
+                        LLM-as-a-Judge
+                    </h3>
+                    <p class="text-sm" style="color: var(--text-secondary);">
+                        一种评估技术，使用一个（通常是更强大的）LLM来模仿人类专家的判断，对另一个LLM的输出进行打分或定性评价。
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <h3 class="text-lg font-bold mb-3 flex items-center">
+                        <i class="fas fa-route mr-2 text-purple-600"></i>
+                        Trajectory Evaluation
+                    </h3>
+                    <p class="text-sm" style="color: var(--text-secondary);">
+                        专为Agent设计的评估方法，不只关注最终结果，而是评估Agent完成任务所采取的整个行动序列的正确性和合理性。
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                    <h3 class="text-lg font-bold mb-3 flex items-center">
+                        <i class="fas fa-chart-bar mr-2 text-orange-600"></i>
+                        LangSmith
+                    </h3>
+                    <p class="text-sm" style="color: var(--text-secondary);">
+                        LangChain推出的平台，用于调试、追踪、评估和监控LLM应用，扮演着LLM应用领域的APM和实验管理平台角色。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Footer -->
+        <footer class="text-center py-8">
+            <p class="text-lg mb-4" style="color: var(--text-secondary);">
+                从"手感驱动"到"数据驱动"的工程化转变
+            </p>
+            <p class="text-sm" style="color: var(--text-secondary);">
+                © 2024 LLM Evaluation Guide. 基于 LangChain OpenEvals 深度分析
+            </p>
+        </footer>
+    </main>
+
+    <!-- External Scripts -->
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/mermaid/8.14.0/mermaid.min.js"></script>
+    
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#1a202c',
+                primaryBorderColor: '#764ba2',
+                lineColor: '#4a5568',
+                sectionBkgColor: '#f7fafc',
+                altSectionBkgColor: '#edf2f7',
+                gridColor: '#e2e8f0',
+                secondaryColor: '#f093fb',
+                tertiaryColor: '#4facfe'
+            }
+        });
+
+        // Theme Management
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // Check for saved theme preference or default to system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        const currentTheme = savedTheme || systemTheme;
+        
+        html.setAttribute('data-theme', currentTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Re-render Mermaid diagrams with new theme
+            setTimeout(() => {
+                mermaid.init(undefined, '.mermaid');
+            }, 100);
+        });
+
+        // Scroll Progress
+        window.addEventListener('scroll', () => {
+            const scrollProgress = document.getElementById('scrollProgress');
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.body.offsetHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            
+            scrollProgress.style.width = scrollPercent + '%';
+        });
+
+        // Smooth Scrolling for Navigation Links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Fade In Animation on Scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Add some interactive effects
+        document.querySelectorAll('.card-hover').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Parallax effect for hero section
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero-bg');
+            if (hero) {
+                hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+            }
+        });
+
+        // Add typing effect to hero title (optional enhancement)
+        function typeWriter(element, text, speed = 100) {
+            let i = 0;
+            element.innerHTML = '';
+            
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            
+            type();
+        }
+
+        // Initialize typing effect when page loads
+        window.addEventListener('load', () => {
+            const heroTitle = document.querySelector('.hero-title');
+            if (heroTitle) {
+                const originalText = heroTitle.textContent;
+                // Uncomment the next line if you want the typing effect
+                // typeWriter(heroTitle, originalText, 50);
+            }
+        });
+    </script>
+</body>
+</html>
