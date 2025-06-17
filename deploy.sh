@@ -2,21 +2,20 @@
 
 # 部署脚本 - 将HTML文件上传到远程服务器并配置nginx
 # 服务器信息
-SERVER_IP="114.55.150.44"
-SERVER_USER="root"
+SERVER_HOST="aliyun-ecs-showpage"  # 使用SSH配置别名
 REMOTE_PATH="/root/www/showpage"
 DOMAIN="case.coderboot.xyz"
 
 echo "========================================="
 echo "开始部署HTML文件到远程服务器"
-echo "服务器: $SERVER_USER@$SERVER_IP"
+echo "服务器: $SERVER_HOST"
 echo "目标目录: $REMOTE_PATH"
 echo "域名: $DOMAIN"
 echo "========================================="
 
 # 1. 创建远程目录
 echo "1. 创建远程目录..."
-ssh $SERVER_USER@$SERVER_IP "mkdir -p $REMOTE_PATH"
+ssh $SERVER_HOST "mkdir -p $REMOTE_PATH"
 
 if [ $? -eq 0 ]; then
     echo "✓ 远程目录创建成功"
@@ -27,7 +26,7 @@ fi
 
 # 2. 上传HTML文件
 echo "2. 上传HTML文件..."
-scp *.html $SERVER_USER@$SERVER_IP:$REMOTE_PATH/
+scp *.html $SERVER_HOST:$REMOTE_PATH/
 
 if [ $? -eq 0 ]; then
     echo "✓ HTML文件上传成功"
@@ -38,7 +37,7 @@ fi
 
 # 3. 设置文件权限
 echo "3. 设置文件权限..."
-ssh $SERVER_USER@$SERVER_IP "chmod 644 $REMOTE_PATH/*.html && chown -R root:root $REMOTE_PATH"
+ssh $SERVER_HOST "chmod 644 $REMOTE_PATH/*.html && chown -R root:root $REMOTE_PATH"
 
 if [ $? -eq 0 ]; then
     echo "✓ 文件权限设置成功"
@@ -48,7 +47,7 @@ fi
 
 # 4. 创建nginx配置文件
 echo "4. 创建nginx配置文件..."
-ssh $SERVER_USER@$SERVER_IP "cat > /etc/nginx/sites-available/showpage.conf << 'EOF'
+ssh $SERVER_HOST "cat > /etc/nginx/sites-available/showpage.conf << 'EOF'
 server {
     listen 80;
     server_name $DOMAIN;
@@ -117,7 +116,7 @@ fi
 
 # 5. 启用网站配置
 echo "5. 启用nginx网站配置..."
-ssh $SERVER_USER@$SERVER_IP "ln -sf /etc/nginx/sites-available/showpage.conf /etc/nginx/sites-enabled/showpage.conf"
+ssh $SERVER_HOST "ln -sf /etc/nginx/sites-available/showpage.conf /etc/nginx/sites-enabled/showpage.conf"
 
 if [ $? -eq 0 ]; then
     echo "✓ nginx配置启用成功"
@@ -127,7 +126,7 @@ fi
 
 # 6. 测试nginx配置
 echo "6. 测试nginx配置..."
-ssh $SERVER_USER@$SERVER_IP "nginx -t"
+ssh $SERVER_HOST "nginx -t"
 
 if [ $? -eq 0 ]; then
     echo "✓ nginx配置测试通过"
@@ -138,7 +137,7 @@ fi
 
 # 7. 重载nginx
 echo "7. 重载nginx服务..."
-ssh $SERVER_USER@$SERVER_IP "systemctl reload nginx"
+ssh $SERVER_HOST "systemctl reload nginx"
 
 if [ $? -eq 0 ]; then
     echo "✓ nginx重载成功"
@@ -149,7 +148,7 @@ fi
 
 # 8. 创建索引页面
 echo "8. 创建索引页面..."
-ssh $SERVER_USER@$SERVER_IP "cat > $REMOTE_PATH/index.html << 'EOF'
+ssh $SERVER_HOST "cat > $REMOTE_PATH/index.html << 'EOF'
 <!DOCTYPE html>
 <html lang=\"zh-CN\">
 <head>
