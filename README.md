@@ -2,6 +2,15 @@
 
 这个项目用于管理和部署多个静态HTML文件到远程服务器，并配置nginx来提供外部访问。
 
+## 🚀 项目特性
+- ✅ 自动化部署脚本
+- ✅ 响应式主页设计
+- ✅ RESTful API接口
+- ✅ nginx性能优化
+- ✅ 安全头部配置
+- ✅ 完整的错误处理
+- ✅ 版本控制管理
+
 ## 项目结构
 
 ```
@@ -97,11 +106,12 @@ web-site-page/
 - **功能**: 显示所有页面的导航界面
 
 ### 具体页面
-- http://show.coderboot.xyz/promptbase-link-refly-guizang-v2-claude4.html
-- http://show.coderboot.xyz/arxivlicense-link-refly-guizang-v2-claude4.html
-- http://show.coderboot.xyz/openevals-link-sumbuddy-refly-guizang-v3-claude4.html
-- http://show.coderboot.xyz/openevals-link-refly-guizang-v3-claude4.html
-- http://show.coderboot.xyz/openevals-link-refly-guizang-v2-claude4.html
+- 🏠 **主页导航**: http://show.coderboot.xyz
+- 📄 **PromptBase页面**: http://show.coderboot.xyz/promptbase-link-refly-guizang-v2-claude4.html
+- 📄 **ArxivLicense页面**: http://show.coderboot.xyz/arxivlicense-link-refly-guizang-v2-claude4.html
+- 📄 **OpenEvals Sumbuddy页面**: http://show.coderboot.xyz/openevals-link-sumbuddy-refly-guizang-v3-claude4.html
+- 📄 **OpenEvals v3页面**: http://show.coderboot.xyz/openevals-link-refly-guizang-v3-claude4.html
+- 📄 **OpenEvals v2页面**: http://show.coderboot.xyz/openevals-link-refly-guizang-v2-claude4.html
 
 ### API接口
 - **页面列表**: http://show.coderboot.xyz/api/pages
