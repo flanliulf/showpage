@@ -144,6 +144,29 @@ location /showpage {
 2. 确保可以通过SSH密钥登录到远程服务器（避免密码输入）
 3. 远程服务器已安装nginx
 
+### 部署方式选择
+
+项目提供两种部署脚本：
+
+#### 1. 基础部署脚本 (`deploy.sh`)
+适用于首次部署或手动控制配置更新：
+```bash
+chmod +x deploy.sh && ./deploy.sh
+```
+
+#### 2. 增强版部署脚本 (`deploy-enhanced.sh`) ⭐ **推荐**
+自动检测HTML文件并动态更新配置，适用于日常开发和新页面添加：
+```bash
+chmod +x deploy-enhanced.sh && ./deploy-enhanced.sh
+```
+
+**增强版特性**：
+- 🔍 **自动检测**：自动扫描本地所有 `*.html` 文件
+- 📝 **智能提取**：自动从HTML文件中提取页面标题
+- 🔄 **动态更新**：自动更新nginx配置中的页面列表API
+- 🎨 **美观主页**：自动生成包含所有页面的美观索引页面
+- ⚡ **一键部署**：无需手动更新配置文件
+
 ### 部署步骤
 
 1. **设置SSH密钥认证**（推荐）：
@@ -164,12 +187,55 @@ location /showpage {
 
 2. **运行部署脚本**：
    ```bash
-   # 赋予执行权限
-   chmod +x deploy.sh
+   # 推荐：使用增强版部署脚本
+   chmod +x deploy-enhanced.sh && ./deploy-enhanced.sh
    
-   # 执行部署
-   ./deploy.sh
+   # 或者：使用基础部署脚本
+   chmod +x deploy.sh && ./deploy.sh
    ```
+
+## 📄 新增HTML页面的完整流程
+
+### 开发阶段
+1. **创建HTML文件**：在项目根目录中创建新的HTML文件
+2. **本地测试**：在浏览器中打开文件进行本地测试
+3. **版本控制**：
+   ```bash
+   git add your-new-page.html
+   git commit -m "添加新页面: your-new-page.html"
+   git push origin main
+   ```
+
+### 部署阶段
+使用增强版部署脚本进行一键部署：
+```bash
+chmod +x deploy-enhanced.sh && ./deploy-enhanced.sh
+```
+
+**增强版脚本会自动**：
+- ✅ 检测新的HTML文件
+- ✅ 提取页面标题（从`<title>`标签）
+- ✅ 更新nginx配置中的API页面列表
+- ✅ 上传所有文件到服务器
+- ✅ 更新服务器配置并重载nginx
+- ✅ 生成包含新页面的美观索引页面
+
+### 验证部署
+1. **访问主页**：http://case.coderboot.xyz/showpage/
+2. **访问新页面**：http://case.coderboot.xyz/showpage/your-new-page.html
+3. **检查API**：http://case.coderboot.xyz/showpage/api/pages
+
+### 手动配置更新（仅当自动化失败时）
+如果需要手动更新配置：
+1. 编辑 `case.example.conf` 中的页面列表
+2. 使用基础部署脚本：`./deploy.sh`
+
+### 最佳实践
+- 🎯 **文件命名**：使用描述性的文件名，便于识别
+- 📝 **页面标题**：确保HTML文件包含清晰的`<title>`标签
+- 🔄 **增量部署**：推荐使用增强版脚本进行日常部署
+- 📋 **版本控制**：所有新页面都应提交到Git仓库
+- 🧪 **本地测试**：部署前在本地浏览器中测试页面
 
 ### 部署脚本功能
 
