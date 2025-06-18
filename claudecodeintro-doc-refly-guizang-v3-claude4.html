@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code 使用指南 - AI 编程助手完整教程</title>
+    
+    <!--110 网页生成 Case：Claude Code 简单介绍（文本+ Refly + 归藏 V3 + Claude Sonnet 4）  -->
+    
+    <!-- External CSS -->
+    <link href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-100-M/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+
+        [data-theme="dark"] {
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --border-color: #374151;
+        }
+
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', Tahoma, Arial, Roboto, "Droid Sans", "Helvetica Neue", "Droid Sans Fallback", "Heiti SC", "Hiragino Sans GB", Simsun, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 50%, var(--accent-color) 100%);
+        }
+
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .code-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .section-divider {
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+            height: 1px;
+            margin: 3rem 0;
+        }
+
+        .floating-element {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .mermaid {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="themeToggle" class="p-3 rounded-full glass-effect text-white hover:bg-white hover:bg-opacity-20 transition-all duration-300">
+            <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient min-h-screen flex items-center justify-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+        
+        <!-- Floating Elements -->
+        <div class="absolute top-20 left-10 floating-element">
+            <i class="fas fa-code text-white text-4xl opacity-20"></i>
+        </div>
+        <div class="absolute bottom-32 right-16 floating-element" style="animation-delay: -2s;">
+            <i class="fas fa-terminal text-white text-3xl opacity-20"></i>
+        </div>
+        <div class="absolute top-1/3 right-1/4 floating-element" style="animation-delay: -4s;">
+            <i class="fas fa-robot text-white text-5xl opacity-20"></i>
+        </div>
+
+        <div class="container mx-auto px-6 text-center relative z-10">
+            <div class="fade-in">
+                <h1 class="text-6xl md:text-8xl font-bold text-white mb-6 leading-tight">
+                    Claude Code
+                </h1>
+                <p class="text-xl md:text-2xl text-white opacity-90 mb-8 max-w-3xl mx-auto leading-relaxed">
+                    将 Claude AI 直接带到您的终端，体验前所未有的 AI 编程助手
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <div class="glass-effect px-6 py-3 rounded-full text-white">
+                        <i class="fas fa-terminal mr-2"></i>
+                        命令行界面
+                    </div>
+                    <div class="glass-effect px-6 py-3 rounded-full text-white">
+                        <i class="fas fa-brain mr-2"></i>
+                        AI 智能编程
+                    </div>
+                    <div class="glass-effect px-6 py-3 rounded-full text-white">
+                        <i class="fas fa-rocket mr-2"></i>
+                        高效开发
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white animate-bounce">
+            <i class="fas fa-chevron-down text-2xl"></i>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="bg-gray-50 dark:bg-gray-900 min-h-screen" style="background-color: var(--bg-secondary);">
+        <div class="container mx-auto px-6 py-16">
+            
+            <!-- Overview Section -->
+            <section class="mb-20">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6" style="color: var(--text-primary);">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-4"></i>
+                        快速开始指南
+                    </h2>
+                    <p class="text-xl max-w-3xl mx-auto leading-relaxed" style="color: var(--text-secondary);">
+                        从安装到使用，一步步带您掌握 Claude Code 的强大功能
+                    </p>
+                </div>
+
+                <!-- Process Flow Visualization -->
+                <div class="mb-16">
+                    <div class="mermaid" id="processFlow">
+                        graph TD
+                            A[安装 Node.js] --> B[安装 Claude Code]
+                            B --> C[验证安装]
+                            C --> D[注册中转平台]
+                            D --> E[购买订阅]
+                            E --> F[兑换激活码]
+                            F --> G[授权登录]
+                            G --> H[开始使用]
+                            
+                            style A fill:#e1f5fe
+                            style B fill:#f3e5f5
+                            style C fill:#e8f5e8
+                            style D fill:#fff3e0
+                            style E fill:#fce4ec
+                            style F fill:#f1f8e9
+                            style G fill:#e3f2fd
+                            style H fill:#f9fbe7
+                    </div>
+                </div>
+            </section>
+
+            <!-- Installation Section -->
+            <section class="mb-20">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 card-hover" style="background-color: var(--bg-primary); border: 1px solid var(--border-color);">
+                    <div class="flex items-center mb-8">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center mr-6">
+                            <i class="fas fa-download text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-bold mb-2" style="color: var(--text-primary);">安装 Claude Code</h3>
+                            <p style="color: var(--text-secondary);">快速安装，立即开始您的 AI 编程之旅</p>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Prerequisites -->
+                        <div class="space-y-6">
+                            <h4 class="text-xl font-semibold flex items-center" style="color: var(--text-primary);">
+                                <span class="step-number text-2xl font-bold mr-3">1</span>
+                                前置条件
+                            </h4>
+                            <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border-l-4 border-blue-500">
+                                <p class="font-medium text-blue-800 dark:text-blue-200">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    需要 Node.js 18 或更高版本
+                                </p>
+                                <p class="text-blue-600 dark:text-blue-300 text-sm mt-1">
+                                    建议使用最新的 LTS 版本以获得最佳性能
+                                </p>
+                            </div>
+                            
+                            <div class="code-block p-4">
+                                <p class="text-sm font-medium mb-2" style="color: var(--text-secondary);">验证 Node.js 安装：</p>
+                                <code class="text-green-600 dark:text-green-400">
+                                    node --version<br>
+                                    npm --version
+                                </code>
+                            </div>
+                        </div>
+
+                        <!-- Installation Steps -->
+                        <div class="space-y-6">
+                            <h4 class="text-xl font-semibold flex items-center" style="color: var(--text-primary);">
+                                <span class="step-number text-2xl font-bold mr-3">2</span>
+                                安装步骤
+                            </h4>
+                            
+                            <div class="code-block p-4">
+                                <p class="text-sm font-medium mb-2" style="color: var(--text-secondary);">全局安装 Claude Code：</p>
+                                <code class="text-purple-600 dark:text-purple-400 text-sm">
+                                    npm install -g https://code.gac.zoco.cc/claudecode/install --registry=https://registry.npmmirror.com
+                                </code>
+                            </div>
+
+                            <div class="code-block p-4">
+                                <p class="text-sm font-medium mb-2" style="color: var(--text-secondary);">验证安装：</p>
+                                <code class="text-green-600 dark:text-green-400">
+                                    claude --version
+                                </code>
+                            </div>
+
+                            <div class="bg-green-50 dark:bg-green-900 p-4 rounded-lg border-l-4 border-green-500">
+                                <p class="font-medium text-green-800 dark:text-green-200">
+                                    <i class="fas fa-check-circle mr-2"></i>
+                                    安装完成后会弹出授权窗口，点击确定即可
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- Activation Section -->
+            <section class="mb-20">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 card-hover" style="background-color: var(--bg-primary); border: 1px solid var(--border-color);">
+                    <div class="flex items-center mb-8">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-orange-500 to-red-600 flex items-center justify-center mr-6">
+                            <i class="fas fa-key text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-bold mb-2" style="color: var(--text-primary);">订阅激活</h3>
+                            <p style="color: var(--text-secondary);">通过中转平台获取稳定的服务</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-yellow-50 dark:bg-yellow-900 p-6 rounded-lg border-l-4 border-yellow-500 mb-8">
+                        <h4 class="font-bold text-yellow-800 dark:text-yellow-200 mb-2">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            重要提示
+                        </h4>
+                        <p class="text-yellow-700 dark:text-yellow-300">
+                            由于网络限制，推荐使用国内稳定的中转平台：
+                            <a href="https://code.gac.zoco.cc/signup?ref=40DXOZ7Q" class="underline font-medium">code.gac.zoco.cc</a>
+                        </p>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-xl" style="background-color: var(--bg-secondary);">
+                            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-user-plus text-white"></i>
+                            </div>
+                            <h4 class="font-bold mb-2" style="color: var(--text-primary);">注册账号</h4>
+                            <p class="text-sm" style="color: var(--text-secondary);">在中转平台注册并激活账号</p>
+                        </div>
+
+                        <div class="text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-xl" style="background-color: var(--bg-secondary);">
+                            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-shopping-cart text-white"></i>
+                            </div>
+                            <h4 class="font-bold mb-2" style="color: var(--text-primary);">购买订阅</h4>
+                            <p class="text-sm" style="color: var(--text-secondary);">通过淘宝购买订阅服务</p>
+                        </div>
+
+                        <div class="text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-xl" style="background-color: var(--bg-secondary);">
+                            <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-ticket-alt text-white"></i>
+                            </div>
+                            <h4 class="font-bold mb-2" style="color: var(--text-primary);">兑换激活</h4>
+                            <p class="text-sm" style="color: var(--text-secondary);">使用优惠码激活订阅</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- Usage Section -->
+            <section class="mb-20">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 card-hover" style="background-color: var(--bg-primary); border: 1px solid var(--border-color);">
+                    <div class="flex items-center mb-8">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center mr-6">
+                            <i class="fas fa-play text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-bold mb-2" style="color: var(--text-primary);">开始使用</h3>
+                            <p style="color: var(--text-secondary);">掌握 Claude Code 的核心功能</p>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Basic Usage -->
+                        <div class="space-y-6">
+                            <h4 class="text-xl font-semibold" style="color: var(--text-primary);">
+                                <i class="fas fa-terminal mr-2 text-blue-500"></i>
+                                基本使用
+                            </h4>
+                            
+                            <div class="code-block p-4">
+                                <p class="text-sm font-medium mb-2" style="color: var(--text-secondary);">进入项目目录并启动：</p>
+                                <code class="text-blue-600 dark:text-blue-400">
+                                    cd your-project-folder<br>
+                                    claude
+                                </code>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg" style="background-color: var(--bg-secondary);">
+                                    <i class="fas fa-magic text-purple-500 mr-3"></i>
+                                    <span style="color: var(--text-primary);">输入 <code>/</code> 激活指令模式</span>
+                                </div>
+                                <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg" style="background-color: var(--bg-secondary);">
+                                    <i class="fas fa-file-alt text-green-500 mr-3"></i>
+                                    <span style="color: var(--text-primary);">使用 <code>/init</code> 创建项目文档</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Scenarios -->
+                        <div class="space-y-6">
+                            <h4 class="text-xl font-semibold" style="color: var(--text-primary);">
+                                <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+                                主要场景
+                            </h4>
+                            
+                            <div class="space-y-4">
+                                <div class="p-4 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900 rounded-r-lg">
+                                    <h5 class="font-semibold text-blue-800 dark:text-blue-200 mb-1">
+                                        <i class="fas fa-code mr-2"></i>编码助手
+                                    </h5>
+                                    <p class="text-blue-600 dark:text-blue-300 text-sm">
+                                        "请帮我解释一下本项目"
+                                    </p>
+                                </div>
+
+                                <div class="p-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-900 rounded-r-lg">
+                                    <h5 class="font-semibold text-red-800 dark:text-red-200 mb-1">
+                                        <i class="fas fa-bug mr-2"></i>Bug 修复
+                                    </h5>
+                                    <p class="text-red-600 dark:text-red-300 text-sm">
+                                        "我遇到了一个问题，请帮我处理"
+                                    </p>
+                                </div>
+
+                                <div class="p-4 border-l-4 border-green-500 bg-green-50 dark:bg-green-900 rounded-r-lg">
+                                    <h5 class="font-semibold text-green-800 dark:text-green-200 mb-1">
+                                        <i class="fas fa-sync-alt mr-2"></i>代码重构
+                                    </h5>
+                                    <p class="text-green-600 dark:text-green-300 text-sm">
+                                        "请帮我重构一下 xxx 模块"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- Features Section -->
+            <section class="mb-20">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-6" style="color: var(--text-primary);">
+                        <i class="fas fa-star text-yellow-500 mr-4"></i>
+                        核心特性
+                    </h2>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 card-hover" style="background-color: var(--bg-primary); border: 1px solid var(--border-color);">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-terminal text-white"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold" style="color: var(--text-primary);">简洁的人机交互</h3>
+                        </div>
+                        <p style="color: var(--text-secondary);" class="leading-relaxed">
+                            基于命令行的直观交互方式，提供丰富的指令覆盖日常开发需求，告别复杂的 IDE 配置。
+                        </p>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 card-hover" style="background-color: var(--bg-primary); border: 1px solid var(--border-color);">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-user-cog text-white"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold" style="color: var(--text-primary);">Human-in-loop 模式</h3>
+                        </div>
+                        <p style="color: var(--text-secondary);" class="leading-relaxed">
+                            提供自选模式，让开发者在整个编程过程中保持主导权，实现人机协作的最佳平衡。
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Further Reading Section -->
+            <section class="mb-20">
+                <div class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl shadow-xl p-8 text-white">
+                    <h3 class="text-3xl font-bold mb-6 text-center">
+                        <i class="fas fa-book-open mr-3"></i>
+                        延伸阅读
+                    </h3>
+                    <p class="text-center mb-8 text-purple-100">
+                        深入了解 AI 编程和开发工具的相关资源
+                    </p>
+                    
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-filter backdrop-blur-sm">
+                            <h4 class="font-bold mb-2">《AI 编程助手实战》</h4>
+                            <p class="text-sm text-purple-100">深入探讨 AI 在软件开发中的应用</p>
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-filter backdrop-blur-sm">
+                            <h4 class="font-bold mb-2">《命令行工具开发指南》</h4>
+                            <p class="text-sm text-purple-100">学习构建高效的命令行应用</p>
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-filter backdrop-blur-sm">
+                            <h4 class="font-bold mb-2">《现代开发工作流》</h4>
+                            <p class="text-sm text-purple-100">优化开发效率的最佳实践</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-6 text-center">
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold mb-4">Claude Code</h3>
+                <p class="text-gray-400 max-w-2xl mx-auto">
+                    让 AI 成为您最得力的编程伙伴，提升开发效率，释放创造力
+                </p>
+            </div>
+            
+            <div class="flex justify-center space-x-6 mb-8">
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fab fa-github text-2xl"></i>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fab fa-twitter text-2xl"></i>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-globe text-2xl"></i>
+                </a>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8">
+                <p class="text-gray-400">
+                    © 2024 Claude Code 使用指南. 让编程更智能，让开发更高效.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/mermaid/8.14.0/mermaid.min.js"></script>
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#6366f1',
+                primaryTextColor: '#1f2937',
+                primaryBorderColor: '#e5e7eb',
+                lineColor: '#6b7280',
+                secondaryColor: '#f9fafb',
+                tertiaryColor: '#f3f4f6'
+            }
+        });
+
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
+
+        // Check for saved theme preference or default to system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        const currentTheme = savedTheme || systemTheme;
+
+        // Apply initial theme
+        if (currentTheme === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+            themeIcon.className = 'fas fa-sun';
+        } else {
+            html.setAttribute('data-theme', 'light');
+            themeIcon.className = 'fas fa-moon';
+        }
+
+        // Theme toggle event listener
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            if (newTheme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+            }
+
+            // Update Mermaid theme
+            if (newTheme === 'dark') {
+                mermaid.initialize({
+                    startOnLoad: true,
+                    theme: 'dark',
+                    themeVariables: {
+                        primaryColor: '#8b5cf6',
+                        primaryTextColor: '#f9fafb',
+                        primaryBorderColor: '#374151',
+                        lineColor: '#9ca3af',
+                        secondaryColor: '#1f2937',
+                        tertiaryColor: '#111827'
+                    }
+                });
+            } else {
+                mermaid.initialize({
+                    startOnLoad: true,
+                    theme: 'default',
+                    themeVariables: {
+                        primaryColor: '#6366f1',
+                        primaryTextColor: '#1f2937',
+                        primaryBorderColor: '#e5e7eb',
+                        lineColor: '#6b7280',
+                        secondaryColor: '#f9fafb',
+                        tertiaryColor: '#f3f4f6'
+                    }
+                });
+            }
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationDelay = '0s';
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all sections
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Add loading animation
+        window.addEventListener('load', () => {
+            document.body.style.opacity = '1';
+        });
+    </script>
+</body>
+</html>
